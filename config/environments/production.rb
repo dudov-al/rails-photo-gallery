@@ -28,7 +28,8 @@ Rails.application.configure do
   # Asset compilation optimizations
   config.assets.js_compressor = :terser
   config.assets.css_compressor = :sass
-  config.assets.compile = false
+  # Allow asset compilation in production for Docker deployment
+  config.assets.compile = true
   config.assets.digest = true
   
   # Precompile additional assets for critical CSS

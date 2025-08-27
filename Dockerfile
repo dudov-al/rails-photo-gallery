@@ -5,6 +5,8 @@ FROM ruby:3.2.0-alpine AS base
 RUN apk add --no-cache \
     build-base \
     postgresql-dev \
+    postgresql-client \
+    redis \
     tzdata \
     imagemagick \
     imagemagick-dev \
@@ -14,7 +16,8 @@ RUN apk add --no-cache \
     curl \
     nodejs \
     npm \
-    yarn
+    yarn \
+    bash
 
 # Set environment variables
 ENV RAILS_ENV=production \
@@ -47,11 +50,8 @@ RUN bundle config set --local deployment 'true' && \
 # Copy application code
 COPY --chown=rails:rails . .
 
-# Precompile assets (skip database operations)
-ENV DATABASE_URL=postgresql://dummy:dummy@dummy:5432/dummy
-RUN SECRET_KEY_BASE=precompile_placeholder \
-    RAILS_ENV=production \
-    bundle exec rails assets:precompile
+# Skip asset precompilation during build - will be done at runtime
+# This avoids database/external service connection issues during build
 
 # Create storage directories
 RUN mkdir -p /app/storage /app/log /app/tmp && \
@@ -67,5 +67,9 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
-# Default command
-CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+# Copy and set up startup script
+COPY --chown=rails:rails docker/startup.sh /app/
+RUN chmod +x /app/startup.sh
+
+# Default command - use startup script
+CMD ["/app/startup.sh", "bundle", "exec", "puma", "-C", "config/puma.rb"]
