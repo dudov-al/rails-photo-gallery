@@ -1,0 +1,31 @@
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/psych-5.2.6/ext/psych
+/usr/local/opt/ruby@3.1/bin/ruby extconf.rb
+checking for yaml.h... yes
+checking for yaml_get_version() in -lyaml... yes
+creating Makefile
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/psych-5.2.6/ext/psych
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2kz3r8 sitelibdir\=./.gem.20250827-21797-2kz3r8 clean
+cd libyaml && /Library/Developer/CommandLineTools/usr/bin/make clean
+/bin/sh: line 0: cd: libyaml: No such file or directory
+make: [clean-so] Error 1 (ignored)
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/psych-5.2.6/ext/psych
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2kz3r8 sitelibdir\=./.gem.20250827-21797-2kz3r8
+compiling psych.c
+compiling psych_emitter.c
+compiling psych_parser.c
+compiling psych_to_ruby.c
+compiling psych_yaml_tree.c
+linking shared-object psych.bundle
+ld: warning: ignoring duplicate libraries: '-lruby.3.1'
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/psych-5.2.6/ext/psych
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2kz3r8 sitelibdir\=./.gem.20250827-21797-2kz3r8 install
+/usr/bin/install -c -m 0755 psych.bundle ./.gem.20250827-21797-2kz3r8
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/psych-5.2.6/ext/psych
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2kz3r8 sitelibdir\=./.gem.20250827-21797-2kz3r8 clean
+cd libyaml && /Library/Developer/CommandLineTools/usr/bin/make clean
+/bin/sh: line 0: cd: libyaml: No such file or directory
+make: [clean-so] Error 1 (ignored)

@@ -1,0 +1,19 @@
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/cgi-0.5.0/ext/cgi/escape
+/usr/local/opt/ruby@3.1/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/cgi-0.5.0/ext/cgi/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qh2v3y sitelibdir\=./.gem.20250827-21797-qh2v3y clean
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/cgi-0.5.0/ext/cgi/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qh2v3y sitelibdir\=./.gem.20250827-21797-qh2v3y
+compiling escape.c
+linking shared-object cgi/escape.bundle
+ld: warning: ignoring duplicate libraries: '-lruby.3.1'
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/cgi-0.5.0/ext/cgi/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qh2v3y sitelibdir\=./.gem.20250827-21797-qh2v3y install
+/usr/bin/install -c -m 0755 escape.bundle ./.gem.20250827-21797-qh2v3y/cgi
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/cgi-0.5.0/ext/cgi/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qh2v3y sitelibdir\=./.gem.20250827-21797-qh2v3y clean

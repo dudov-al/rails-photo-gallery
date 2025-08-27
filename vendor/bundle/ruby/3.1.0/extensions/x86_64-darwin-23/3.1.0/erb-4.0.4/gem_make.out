@@ -1,0 +1,19 @@
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/erb-4.0.4/ext/erb/escape
+/usr/local/opt/ruby@3.1/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/erb-4.0.4/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2gqmjy sitelibdir\=./.gem.20250827-21797-2gqmjy clean
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/erb-4.0.4/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2gqmjy sitelibdir\=./.gem.20250827-21797-2gqmjy
+compiling escape.c
+linking shared-object erb/escape.bundle
+ld: warning: ignoring duplicate libraries: '-lruby.3.1'
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/erb-4.0.4/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2gqmjy sitelibdir\=./.gem.20250827-21797-2gqmjy install
+/usr/bin/install -c -m 0755 escape.bundle ./.gem.20250827-21797-2gqmjy/erb
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/erb-4.0.4/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-2gqmjy sitelibdir\=./.gem.20250827-21797-2gqmjy clean

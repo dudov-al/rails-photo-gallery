@@ -1,0 +1,19 @@
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+/usr/local/opt/ruby@3.1/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qwl4hs sitelibdir\=./.gem.20250827-21797-qwl4hs clean
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qwl4hs sitelibdir\=./.gem.20250827-21797-qwl4hs
+compiling websocket_mask.c
+linking shared-object websocket_mask.bundle
+ld: warning: ignoring duplicate libraries: '-lruby.3.1'
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qwl4hs sitelibdir\=./.gem.20250827-21797-qwl4hs install
+/usr/bin/install -c -m 0755 websocket_mask.bundle ./.gem.20250827-21797-qwl4hs
+
+current directory: /Users/alex/Desktop/solo/photograph/vendor/bundle/ruby/3.1.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20250827-21797-qwl4hs sitelibdir\=./.gem.20250827-21797-qwl4hs clean
