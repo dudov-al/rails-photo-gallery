@@ -34,20 +34,22 @@ Rails.application.configure do
   # Precompile additional assets for critical CSS
   config.assets.precompile += %w(critical.css)
 
-  # Active Storage optimized for Vercel Blob
-  config.active_storage.service = :vercel_blob_hot
+  # Active Storage for Docker deployment - local disk storage
+  config.active_storage.service = :production
   config.active_storage.variant_processor = :vips
   config.active_storage.resolve_model_to_route = :rails_storage_proxy
 
-  # Force SSL with HSTS
-  config.force_ssl = true
-  config.ssl_options = {
-    hsts: {
-      expires: 31536000,
-      subdomains: true,
-      preload: true
+  # SSL configuration - conditionally enabled
+  config.force_ssl = ENV['FORCE_SSL'] == 'true'
+  if config.force_ssl
+    config.ssl_options = {
+      hsts: {
+        expires: 31536000,
+        subdomains: true,
+        preload: true
+      }
     }
-  }
+  end
 
   # Optimized logging
   config.log_level = :info
@@ -65,7 +67,8 @@ Rails.application.configure do
   # Mailer configuration
   config.action_mailer.perform_caching = false
   config.action_mailer.default_url_options = { 
-    host: ENV['VERCEL_URL'] || ENV['CUSTOM_DOMAIN'] 
+    host: ENV['PHOTOGRAPH_HOST'] || 'localhost',
+    protocol: ENV['PHOTOGRAPH_PROTOCOL'] || 'http'
   }
 
   # I18n optimizations

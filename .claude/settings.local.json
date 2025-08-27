@@ -32,7 +32,10 @@
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
       "WebFetch(domain:vercel.link)",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:vercel.com)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []

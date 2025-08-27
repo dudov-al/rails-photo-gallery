@@ -1,0 +1,71 @@
+# Git
+.git
+.gitignore
+README.md
+.env.example
+.env
+
+# Documentation
+*.md
+DEPLOYMENT.md
+PERFORMANCE_*.md
+SECURITY_*.md
+FRONTEND_IMPLEMENTATION_REPORT.md
+OPTIMIZATION_FILES_SUMMARY.md
+PHASE_5_IMPLEMENTATION.md
+PRODUCTION_DEPLOYMENT_GUIDE.md
+VERCEL_DEPLOYMENT_INSTRUCTIONS.md
+
+# Development
+.env.development
+.env.test
+.env.local
+
+# Log files  
+log/*
+*.log
+npm-debug.log*
+
+# Runtime data
+tmp/*
+!tmp/.keep
+storage/*
+!storage/.keep
+
+# Dependency directories
+node_modules/
+vendor/bundle/
+.bundle/
+
+# Test files
+spec/
+test/
+coverage/
+
+# Development tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Vercel specific (not needed for Docker)
+.vercel/
+vercel.json
+vercel.json.backup
+vercel_optimized.json
+api/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore

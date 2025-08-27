@@ -61,6 +61,16 @@ vercel_blob:
     metadata_directive: REPLACE
     cache_control: "private, no-cache"
 
+# Production storage for Docker deployment - local disk with optimization
+production:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+  
+# Docker development/production storage configuration
+docker_local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
 # For development, you can use local storage or a service like MinIO
 amazon:
   service: S3

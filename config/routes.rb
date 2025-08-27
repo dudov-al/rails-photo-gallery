@@ -39,9 +39,12 @@ Rails.application.routes.draw do
   # CSP violation reporting
   post '/csp_reports', to: 'csp_reports#create'
   
-  # Sidekiq web interface (development only)
-  if Rails.env.development?
-    require 'sidekiq/web'
+  # Sidekiq web interface
+  require 'sidekiq/web'
+  if Rails.env.production?
+    # Authentication is configured in config/initializers/sidekiq.rb
+    mount Sidekiq::Web => '/sidekiq'
+  elsif Rails.env.development?
     mount Sidekiq::Web => '/sidekiq'
   end
 end

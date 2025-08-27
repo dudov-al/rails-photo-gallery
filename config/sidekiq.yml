@@ -1,0 +1,34 @@
+# Sidekiq configuration for photograph gallery
+
+# Server settings
+:concurrency: 5
+:timeout: 25
+:verbose: false
+
+# Queues configuration (order matters - higher priority first)
+:queues:
+  - critical
+  - high
+  - default
+  - low
+  - mailers
+  - image_analysis
+  - image_purge
+
+# Production settings
+production:
+  :concurrency: 10
+  :timeout: 25
+  
+development:
+  :concurrency: 3
+  :timeout: 25
+
+# Retry configuration
+:max_retries: 3
+:dead_timeout: 3600
+
+# Scheduler (if using sidekiq-cron)
+# :scheduler:
+#   :enabled: true
+#   :dynamic: true
