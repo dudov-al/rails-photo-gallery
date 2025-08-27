@@ -6,6 +6,9 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Explicitly require custom middleware before application class
+require_relative '../app/middleware/security_headers_middleware'
+
 module Photograph
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
