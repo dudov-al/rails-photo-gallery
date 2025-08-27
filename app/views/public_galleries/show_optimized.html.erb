@@ -1,0 +1,320 @@
+<% content_for :title, @gallery.title %>
+
+<%= content_for :head do %>
+  <meta name="description" content="<%= @gallery.description %> - Professional photography by <%= @gallery.photographer.name %>">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <\!-- Optimized font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
+  
+  <\!-- Critical CSS inlined -->
+  <style>
+    <%= Rails.application.assets['critical.css'].to_s.html_safe %>
+  </style>
+  
+  <\!-- Preload critical images -->
+  <% @images.limit(6).each do |image| %>
+    <link rel="preload" as="image" href="<%= optimized_thumbnail_url(image) %>">
+  <% end %>
+  
+  <\!-- Open Graph optimized -->
+  <meta property="og:title" content="<%= @gallery.title %> - <%= @gallery.photographer.name %>">
+  <meta property="og:description" content="Professional photography gallery with <%= pluralize(@gallery.images.count, 'photo') %>">
+  <meta property="og:type" content="website">
+  <% if @images.any? %>
+    <meta property="og:image" content="<%= url_for(@images.first.web_size) %>">
+    <meta property="og:image:width" content="<%= @images.first.width %>">
+    <meta property="og:image:height" content="<%= @images.first.height %>">
+  <% end %>
+  
+  <\!-- Performance monitoring -->
+  <script>
+    window.performanceMetrics = {
+      startTime: performance.now(),
+      imageLoadTimes: [],
+      totalImages: <%= @images.count %>
+    };
+  </script>
+<% end %>
+
+<div class="skip-link">
+  <a href="#main-content">Skip to main content</a>
+</div>
+
+<div 
+  data-controller="optimized-gallery" 
+  data-optimized-gallery-images-value="<%= @images_data.to_json %>"
+  data-optimized-gallery-download-all-url-value="<%= download_all_images_path(@gallery.slug) %>"
+  class="public-gallery-container"
+>
+  <\!-- Optimized Gallery Header -->
+  <header class="public-gallery-header">
+    <div class="header-content">
+      <div class="gallery-meta">
+        <h1 class="gallery-title"><%= @gallery.title %></h1>
+        <div class="gallery-info">
+          <span class="photo-count" aria-label="<%= pluralize(@gallery.images.count, 'photo') %> in this gallery">
+            <%= pluralize(@gallery.images.count, 'photo') %>
+          </span>
+          <span class="separator" aria-hidden="true">•</span>
+          <span class="photographer-name">by <%= @gallery.photographer.name %></span>
+          <% if @gallery.created_at %>
+            <span class="separator" aria-hidden="true">•</span>
+            <time datetime="<%= @gallery.created_at.iso8601 %>" class="gallery-date">
+              <%= @gallery.created_at.strftime("%B %Y") %>
+            </time>
+          <% end %>
+        </div>
+        <% if @gallery.description.present? %>
+          <p class="gallery-description"><%= simple_format(@gallery.description) %></p>
+        <% end %>
+      </div>
+      
+      <% if @images.any? %>
+        <div class="gallery-actions">
+          <button 
+            class="download-all-btn"
+            data-action="click->optimized-gallery#downloadAll"
+            aria-label="Download all photos in this gallery"
+          >
+            <svg class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" width="16" height="16">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download All
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </header>
+
+  <\!-- Optimized Main Gallery Content -->
+  <main id="main-content" class="gallery-main">
+    <% if @images.any? %>
+      <div 
+        class="public-gallery-grid" 
+        data-optimized-gallery-target="grid"
+        role="grid" 
+        aria-label="Photo gallery"
+      >
+        <% @images.each_with_index do |image, index| %>
+          <div 
+            class="public-gallery-item"
+            data-optimized-gallery-target="item"
+            role="gridcell"
+            aria-label="Photo <%= index + 1 %> of <%= @images.count %>"
+          >
+            <div class="image-container">
+              <\!-- Optimized shimmer placeholder -->
+              <div class="image-placeholder" aria-hidden="true"></div>
+              
+              <\!-- Optimized responsive image -->
+              <img 
+                data-thumbnail="<%= optimized_thumbnail_url(image) %>"
+                data-web="<%= optimized_web_url(image) %>"
+                data-image-index="<%= index %>"
+                alt="<%= image.alt_text || "#{@gallery.title} - Photo #{index + 1}" %>"
+                loading="<%= index < 6 ? 'eager' : 'lazy' %>"
+                decoding="async"
+                data-action="click->optimized-gallery#openLightbox"
+                class="gallery-image"
+                <% if index < 6 %>
+                  fetchpriority="high"
+                <% end %>
+                onload="
+                  this.classList.add('loaded');
+                  if (window.performanceMetrics) {
+                    window.performanceMetrics.imageLoadTimes.push(performance.now() - window.performanceMetrics.startTime);
+                  }
+                "
+              >
+            </div>
+
+            <\!-- Download overlay loaded asynchronously -->
+            <div class="public-download-overlay" style="display: none;">
+              <button 
+                class="public-download-btn"
+                data-action="click->optimized-gallery#downloadImage"
+                data-image-index="<%= index %>"
+                aria-label="Download <%= image.filename %>"
+              >
+                <svg class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" width="14" height="14">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Download</span>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <\!-- Optimized Lightbox Modal (loaded asynchronously) -->
+      <div 
+        class="public-lightbox"
+        data-optimized-gallery-target="lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Full-screen image viewer"
+        aria-hidden="true"
+        style="display: none;"
+      >
+        <div 
+          class="lightbox-backdrop"
+          data-action="click->optimized-gallery#backdropClick"
+          aria-hidden="true"
+        ></div>
+        
+        <div class="lightbox-content">
+          <img 
+            data-optimized-gallery-target="lightboxImage"
+            class="lightbox-image"
+            alt=""
+            role="img"
+            loading="lazy"
+            decoding="async"
+          >
+          
+          <\!-- Navigation buttons -->
+          <button 
+            class="lightbox-nav prev"
+            data-optimized-gallery-target="prevBtn"
+            data-action="click->optimized-gallery#prevImage"
+            aria-label="Previous image"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24" aria-hidden="true">
+              <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+          </button>
+          
+          <button 
+            class="lightbox-nav next"
+            data-optimized-gallery-target="nextBtn"
+            data-action="click->optimized-gallery#nextImage"
+            aria-label="Next image"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24" aria-hidden="true">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <\!-- Lightbox controls -->
+        <div class="lightbox-controls">
+          <button 
+            data-action="click->optimized-gallery#downloadCurrentImage"
+            aria-label="Download current image"
+            title="Download Image"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
+          
+          <button 
+            data-optimized-gallery-target="closeBtn"
+            data-action="click->optimized-gallery#closeLightbox"
+            aria-label="Close lightbox"
+            title="Close (ESC)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <\!-- Image counter -->
+        <div 
+          class="lightbox-counter"
+          data-optimized-gallery-target="lightboxCounter"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          1 / <%= @images.count %>
+        </div>
+      </div>
+
+    <% else %>
+      <\!-- Empty state -->
+      <div class="status-page">
+        <div class="status-content">
+          <div class="status-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+          </div>
+          <h2 class="status-title">Gallery is Empty</h2>
+          <p class="status-message">
+            This gallery doesn't contain any photos yet. Check back later for updates.
+          </p>
+        </div>
+      </div>
+    <% end %>
+  </main>
+</div>
+
+<\!-- Performance monitoring script -->
+<script>
+  // Load non-critical components after page load
+  window.addEventListener('load', function() {
+    // Show download overlays after load
+    document.querySelectorAll('.public-download-overlay').forEach(overlay => {
+      overlay.style.display = 'flex';
+    });
+    
+    // Show lightbox after load
+    const lightbox = document.querySelector('.public-lightbox');
+    if (lightbox) {
+      lightbox.style.display = 'block';
+    }
+    
+    // Log performance metrics
+    if (window.performanceMetrics) {
+      const loadTime = performance.now() - window.performanceMetrics.startTime;
+      console.log('Gallery loaded in:', Math.round(loadTime), 'ms');
+      console.log('Images loaded:', window.performanceMetrics.imageLoadTimes.length);
+      
+      if (loadTime > 3000) {
+        console.warn('Slow page load detected:', Math.round(loadTime), 'ms');
+      }
+    }
+  });
+</script>
+
+<\!-- Structured data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageGallery",
+  "name": "<%= @gallery.title %>",
+  "description": "<%= @gallery.description %>",
+  "creator": {
+    "@type": "Person",
+    "name": "<%= @gallery.photographer.name %>"
+  },
+  "dateCreated": "<%= @gallery.created_at&.iso8601 %>",
+  "numberOfItems": <%= @images.count %>,
+  "associatedMedia": [
+    <% @images.limit(20).each_with_index do |image, index| %>
+    {
+      "@type": "ImageObject",
+      "name": "<%= image.filename %>",
+      "contentUrl": "<%= url_for(image.web_size) %>",
+      "thumbnailUrl": "<%= url_for(image.thumbnail) %>",
+      "encodingFormat": "<%= image.content_type %>",
+      "width": "<%= image.width %>",
+      "height": "<%= image.height %>"
+    }<%= ',' unless index == [@images.count - 1, 19].min %>
+    <% end %>
+  ]
+}
+</script>
+EOF < /dev/null

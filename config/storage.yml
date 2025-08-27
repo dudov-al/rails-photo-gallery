@@ -1,0 +1,70 @@
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# Multi-tier Vercel Blob storage configuration with encryption
+# Hot tier for frequently accessed variants (thumbnails, web sizes)
+vercel_blob_hot:
+  service: S3
+  access_key_id: <%= ENV['VERCEL_BLOB_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['VERCEL_BLOB_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV.fetch('VERCEL_BLOB_REGION', 'us-east-1') %>
+  bucket: <%= ENV['VERCEL_BLOB_BUCKET'] %>
+  endpoint: <%= ENV['VERCEL_BLOB_ENDPOINT'] %>
+  force_path_style: true
+  # Server-side encryption configuration
+  server_side_encryption: AES256
+  server_side_encryption_kms_key_id: <%= ENV['VERCEL_BLOB_KMS_KEY_ID'] %>
+  # Additional security headers
+  upload:
+    server_side_encryption: AES256
+    server_side_encryption_kms_key_id: <%= ENV['VERCEL_BLOB_KMS_KEY_ID'] %>
+    metadata_directive: REPLACE
+    cache_control: "private, no-cache"
+
+# Cold tier for original files (rarely accessed, cost-optimized)
+vercel_blob_cold:
+  service: S3
+  access_key_id: <%= ENV['VERCEL_BLOB_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['VERCEL_BLOB_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV.fetch('VERCEL_BLOB_REGION', 'us-east-1') %>
+  bucket: <%= ENV['VERCEL_BLOB_BUCKET'] %>
+  endpoint: <%= ENV['VERCEL_BLOB_ENDPOINT'] %>
+  force_path_style: true
+  # Enhanced encryption for long-term storage
+  server_side_encryption: aws:kms
+  server_side_encryption_kms_key_id: <%= ENV['VERCEL_BLOB_KMS_KEY_ID'] %>
+  storage_class: STANDARD_IA
+  upload:
+    server_side_encryption: aws:kms
+    server_side_encryption_kms_key_id: <%= ENV['VERCEL_BLOB_KMS_KEY_ID'] %>
+    storage_class: STANDARD_IA
+    metadata_directive: REPLACE
+    cache_control: "private, no-cache"
+
+# Legacy/fallback configuration with encryption
+vercel_blob:
+  service: S3
+  access_key_id: <%= ENV['VERCEL_BLOB_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['VERCEL_BLOB_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV.fetch('VERCEL_BLOB_REGION', 'us-east-1') %>
+  bucket: <%= ENV['VERCEL_BLOB_BUCKET'] %>
+  endpoint: <%= ENV['VERCEL_BLOB_ENDPOINT'] %>
+  force_path_style: true
+  server_side_encryption: AES256
+  upload:
+    server_side_encryption: AES256
+    metadata_directive: REPLACE
+    cache_control: "private, no-cache"
+
+# For development, you can use local storage or a service like MinIO
+amazon:
+  service: S3
+  access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+  secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+  region: us-east-1
+  bucket: your_own_bucket

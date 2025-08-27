@@ -1,0 +1,27 @@
+<% content_for :title, "Gallery Expired" %>
+
+<div class="status-page">
+  <div class="status-content">
+    <div class="status-icon">
+      <i class="fas fa-clock" aria-hidden="true"></i>
+    </div>
+    
+    <h1 class="status-title">Gallery Expired</h1>
+    <p class="status-message">
+      This gallery is no longer available for viewing. 
+      <% if @gallery&.expires_at %>
+        It expired on <%= @gallery.expires_at.strftime("%B %d, %Y") %>.
+      <% end %>
+      Please contact the photographer if you need access to these photos.
+    </p>
+    
+    <%= link_to "Go Back", "javascript:history.back()", class: "status-action" %>
+  </div>
+</div>
+
+<!-- Minimal styling for error page -->
+<style>
+  .navbar { display: none; }
+  .footer { display: none; }
+  body { margin: 0; padding: 0; }
+</style>

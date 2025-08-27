@@ -1,0 +1,386 @@
+<% content_for :title, "My Galleries" %>
+
+<div class="container-fluid py-4">
+  <!-- Dashboard Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">My Galleries</h1>
+        <%= link_to "Create New Gallery", new_gallery_path, 
+            class: "btn btn-primary", 
+            data: { bs_toggle: "tooltip", title: "Create a new photo gallery" } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Stats -->
+  <div class="row mb-4">
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-primary mb-0"><%= @stats[:total_galleries] %></h4>
+          <small class="text-muted">Total Galleries</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-success mb-0"><%= @stats[:published_galleries] %></h4>
+          <small class="text-muted">Published</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-info mb-0"><%= @stats[:total_images] %></h4>
+          <small class="text-muted">Total Images</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-warning mb-0"><%= @stats[:total_views] %></h4>
+          <small class="text-muted">Total Views</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-star mb-0"><%= @stats[:featured_galleries] %></h4>
+          <small class="text-muted">Featured</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h4 class="card-title text-secondary mb-0"><%= @stats[:password_protected_galleries] %></h4>
+          <small class="text-muted">Protected</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <%= form_with url: galleries_path, method: :get, local: true, 
+                       class: "row g-3 align-items-end" do |f| %>
+            <div class="col-md-4">
+              <%= f.text_field :search, 
+                  value: params[:search], 
+                  placeholder: "Search galleries...", 
+                  class: "form-control" %>
+            </div>
+            <div class="col-md-2">
+              <%= f.select :filter, 
+                  options_for_select([
+                    ['All Galleries', ''],
+                    ['Published', 'published'],
+                    ['Unpublished', 'unpublished'],
+                    ['Featured', 'featured'],
+                    ['Password Protected', 'password_protected'],
+                    ['Expired', 'expired']
+                  ], params[:filter]), 
+                  { include_blank: false }, 
+                  { class: "form-select" } %>
+            </div>
+            <div class="col-md-2">
+              <%= f.select :sort, 
+                  options_for_select([
+                    ['Recently Updated', ''],
+                    ['Recently Created', 'created_desc'],
+                    ['Oldest First', 'created_asc'],
+                    ['Title A-Z', 'title'],
+                    ['Most Views', 'views'],
+                    ['Most Images', 'images_count']
+                  ], params[:sort]), 
+                  { include_blank: false }, 
+                  { class: "form-select" } %>
+            </div>
+            <div class="col-md-2">
+              <%= f.submit "Filter", class: "btn btn-outline-primary w-100" %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to "Clear", galleries_path, 
+                  class: "btn btn-outline-secondary w-100" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Galleries Grid -->
+  <div class="row">
+    <% if @galleries.any? %>
+      <% @galleries.each do |gallery| %>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <!-- Gallery Image -->
+            <div class="card-img-top position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
+              <% if gallery.images.any? %>
+                <% first_image = gallery.images.first %>
+                <% if first_image.thumbnail_url.present? %>
+                  <img src="<%= first_image.thumbnail_url %>" 
+                       alt="<%= gallery.title %>" 
+                       class="w-100 h-100" 
+                       style="object-fit: cover;">
+                <% else %>
+                  <div class="d-flex align-items-center justify-content-center h-100">
+                    <i class="bi bi-image fs-1 text-muted"></i>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="d-flex align-items-center justify-content-center h-100">
+                  <div class="text-center text-muted">
+                    <i class="bi bi-images fs-1 d-block mb-2"></i>
+                    <small>No images yet</small>
+                  </div>
+                </div>
+              <% end %>
+              
+              <!-- Status Badges -->
+              <div class="position-absolute top-0 start-0 p-2">
+                <% unless gallery.published? %>
+                  <span class="badge bg-secondary">Draft</span>
+                <% end %>
+                <% if gallery.featured? %>
+                  <span class="badge bg-warning">Featured</span>
+                <% end %>
+                <% if gallery.password_protected? %>
+                  <span class="badge bg-info">Protected</span>
+                <% end %>
+                <% if gallery.expired? %>
+                  <span class="badge bg-danger">Expired</span>
+                <% end %>
+              </div>
+              
+              <!-- Image Count -->
+              <div class="position-absolute bottom-0 end-0 p-2">
+                <span class="badge bg-dark bg-opacity-75">
+                  <i class="bi bi-images me-1"></i><%= gallery.images.count %>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Gallery Info -->
+            <div class="card-body">
+              <h5 class="card-title"><%= truncate(gallery.title, length: 50) %></h5>
+              <% if gallery.description.present? %>
+                <p class="card-text text-muted small">
+                  <%= truncate(strip_tags(gallery.description), length: 80) %>
+                </p>
+              <% end %>
+              
+              <!-- Gallery Stats -->
+              <div class="row g-0 mb-3 text-center">
+                <div class="col">
+                  <small class="text-muted">
+                    <i class="bi bi-eye me-1"></i><%= gallery.views_count %> views
+                  </small>
+                </div>
+                <div class="col">
+                  <small class="text-muted">
+                    <%= time_ago_in_words(gallery.created_at) %> ago
+                  </small>
+                </div>
+              </div>
+              
+              <!-- Public Gallery Link -->
+              <% if gallery.viewable? %>
+                <div class="mb-3">
+                  <%= link_to public_gallery_path(gallery.slug), 
+                      class: "btn btn-outline-success btn-sm", 
+                      target: "_blank",
+                      data: { bs_toggle: "tooltip", title: "View public gallery" } do %>
+                    <i class="bi bi-eye me-1"></i>View Public Gallery
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+            
+            <!-- Actions -->
+            <div class="card-footer bg-transparent">
+              <div class="d-flex gap-1 flex-wrap">
+                <%= link_to "Edit", edit_gallery_path(gallery), 
+                    class: "btn btn-primary btn-sm flex-fill" %>
+                <%= link_to "Images", gallery_images_path(gallery), 
+                    class: "btn btn-outline-primary btn-sm flex-fill" %>
+                
+                <!-- Dropdown for more actions -->
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                          type="button" 
+                          data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <%= link_to "Duplicate", "#", 
+                          class: "dropdown-item",
+                          data: { 
+                            bs_toggle: "modal", 
+                            bs_target: "#duplicateModal",
+                            gallery_id: gallery.id,
+                            gallery_title: gallery.title
+                          } %>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <%= link_to "Delete", "#", 
+                          class: "dropdown-item text-danger",
+                          data: { 
+                            bs_toggle: "modal", 
+                            bs_target: "#deleteModal",
+                            gallery_id: gallery.id,
+                            gallery_title: gallery.title,
+                            gallery_slug: gallery.slug
+                          } %>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-images display-1 text-muted mb-3"></i>
+            <h3 class="text-muted">No galleries found</h3>
+            <p class="text-muted mb-4">
+              <% if params[:search].present? || params[:filter].present? %>
+                No galleries match your current filters. Try adjusting your search or clearing the filters.
+              <% else %>
+                Start by creating your first photo gallery to showcase your work.
+              <% end %>
+            </p>
+            <% if params[:search].present? || params[:filter].present? %>
+              <%= link_to "Clear Filters", galleries_path, 
+                  class: "btn btn-outline-primary me-2" %>
+            <% end %>
+            <%= link_to "Create Your First Gallery", new_gallery_path, 
+                class: "btn btn-primary" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Pagination -->
+  <% if @galleries.respond_to?(:current_page) %>
+    <div class="row mt-4">
+      <div class="col-12 d-flex justify-content-center">
+        <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <strong>This action cannot be undone!</strong>
+        </div>
+        <p>You are about to delete the gallery <strong id="deleteGalleryTitle"></strong> and all its images.</p>
+        <p>To confirm deletion, please type the gallery's slug below:</p>
+        <%= form_with url: "", method: :delete, id: "deleteForm", class: "mt-3" do |f| %>
+          <div class="mb-3">
+            <label class="form-label">Gallery slug:</label>
+            <input type="text" name="confirm_delete" class="form-control" id="deleteSlugInput" 
+                   placeholder="Type the gallery slug here" required>
+            <div class="form-text">Slug: <code id="deleteGallerySlug"></code></div>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="deleteForm" class="btn btn-danger">Delete Gallery</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate Confirmation Modal -->
+<div class="modal fade" id="duplicateModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Duplicate Gallery</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Create a copy of <strong id="duplicateGalleryTitle"></strong>?</p>
+        <p class="text-muted">The duplicated gallery will be unpublished and you can customize it before sharing.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmDuplicate">Duplicate Gallery</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle delete modal
+  const deleteModal = document.getElementById('deleteModal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      const galleryId = button.getAttribute('data-gallery-id');
+      const galleryTitle = button.getAttribute('data-gallery-title');
+      const gallerySlug = button.getAttribute('data-gallery-slug');
+      
+      document.getElementById('deleteGalleryTitle').textContent = galleryTitle;
+      document.getElementById('deleteGallerySlug').textContent = gallerySlug;
+      document.getElementById('deleteForm').action = `/galleries/${galleryId}`;
+      document.getElementById('deleteSlugInput').value = '';
+    });
+  }
+  
+  // Handle duplicate modal
+  const duplicateModal = document.getElementById('duplicateModal');
+  if (duplicateModal) {
+    duplicateModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      const galleryId = button.getAttribute('data-gallery-id');
+      const galleryTitle = button.getAttribute('data-gallery-title');
+      
+      document.getElementById('duplicateGalleryTitle').textContent = galleryTitle;
+      document.getElementById('confirmDuplicate').onclick = function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/galleries/${galleryId}/duplicate`;
+        
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'authenticity_token';
+        csrfInput.value = token;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+      };
+    });
+  }
+});
+</script>

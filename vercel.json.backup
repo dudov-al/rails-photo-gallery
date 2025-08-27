@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "config.ru",
+      "use": "@vercel/ruby",
+      "config": {
+        "includeFiles": [
+          "**",
+          ".bundle/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/public/assets/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/packs/(.*)",
+      "dest": "/public/packs/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot))",
+      "dest": "/public/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/config.ru"
+    }
+  ],
+  "env": {
+    "RACK_ENV": "production",
+    "RAILS_ENV": "production",
+    "RAILS_SERVE_STATIC_FILES": "true",
+    "RAILS_LOG_TO_STDOUT": "true",
+    "SECRET_KEY_BASE": "@secret_key_base"
+  },
+  "functions": {
+    "config.ru": {
+      "runtime": "@vercel/ruby@3.0.1",
+      "maxDuration": 30
+    }
+  },
+  "regions": [
+    "iad1"
+  ]
+}

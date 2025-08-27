@@ -1,0 +1,9 @@
+log/*
+tmp/*
+public/assets/
+public/packs/
+.bundle/
+node_modules/
+.git/
+*.log
+.DS_Store

@@ -1,0 +1,116 @@
+<div class="hero-section bg-primary text-white py-5 mb-5">
+  <div class="container text-center">
+    <h1 class="display-4 mb-3">Professional Photo Gallery</h1>
+    <p class="lead mb-4">Share your photography with clients through beautiful, secure galleries</p>
+    <% unless photographer_signed_in? %>
+      <div class="d-flex justify-content-center gap-3">
+        <%= link_to "Get Started", register_path, class: "btn btn-light btn-lg" %>
+        <%= link_to "Login", login_path, class: "btn btn-outline-light btn-lg" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div class="container">
+  <% if photographer_signed_in? %>
+    <div class="row">
+      <div class="col-12">
+        <h2>Welcome back, <%= current_photographer.name %>!</h2>
+        <p class="lead">Manage your galleries and share your work with clients.</p>
+        
+        <div class="row mt-4">
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-images fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">My Galleries</h5>
+                <p class="card-text">View and manage your photo galleries</p>
+                <%= link_to "View Galleries", galleries_path, class: "btn btn-primary" %>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Create Gallery</h5>
+                <p class="card-text">Start a new photo gallery</p>
+                <%= link_to "New Gallery", new_gallery_path, class: "btn btn-success" %>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-user-cog fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Profile</h5>
+                <p class="card-text">Update your account settings</p>
+                <%= link_to "Edit Profile", "#", class: "btn btn-info" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center mb-5">Why Choose Photograph?</h2>
+        
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+              <h4>Secure & Private</h4>
+              <p>Password-protected galleries ensure only your clients can access their photos.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+              <h4>Mobile Optimized</h4>
+              <p>Perfect viewing experience on all devices - desktop, tablet, and mobile.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-download fa-3x text-primary mb-3"></i>
+              <h4>Easy Downloads</h4>
+              <p>Clients can easily download high-resolution images with one click.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mt-5">
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-upload fa-3x text-success mb-3"></i>
+              <h4>Drag & Drop Upload</h4>
+              <p>Upload multiple images at once with our intuitive interface.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-clock fa-3x text-success mb-3"></i>
+              <h4>Auto Expiration</h4>
+              <p>Set expiration dates for galleries to automatically manage access.</p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="text-center">
+              <i class="fas fa-eye fa-3x text-success mb-3"></i>
+              <h4>View Analytics</h4>
+              <p>Track gallery views and download statistics.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

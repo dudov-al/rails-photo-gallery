@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Photograph - Professional Photo Gallery</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  </head>
+
+  <body data-controller="gallery-viewer" data-action="keydown->gallery-viewer#keyPressed">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <%= link_to "Photograph", root_path, class: "navbar-brand" %>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <% if photographer_signed_in? %>
+              <li class="nav-item">
+                <%= link_to "Dashboard", galleries_path, class: "nav-link" %>
+              </li>
+              <li class="nav-item">
+                <%= link_to "New Gallery", new_gallery_path, class: "nav-link" %>
+              </li>
+            <% end %>
+          </ul>
+          
+          <ul class="navbar-nav">
+            <% if photographer_signed_in? %>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <%= current_photographer.name %>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><%= link_to "Profile", edit_photographer_path(current_photographer), class: "dropdown-item" %></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><%= link_to "Logout", logout_path, method: :delete, class: "dropdown-item" %></li>
+                </ul>
+              </li>
+            <% else %>
+              <li class="nav-item">
+                <%= link_to "Login", login_path, class: "nav-link" %>
+              </li>
+              <li class="nav-item">
+                <%= link_to "Register", register_path, class: "nav-link" %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <% if notice %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= notice %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% end %>
+
+      <% if alert %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= alert %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <!-- Image Viewer Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" data-gallery-viewer-target="modal">
+      <div class="modal-dialog modal-fullscreen-custom">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title" data-gallery-viewer-target="modalTitle">Image</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <button class="modal-nav-btn prev" data-gallery-viewer-target="prevButton" data-action="click->gallery-viewer#previousImage">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <img data-gallery-viewer-target="modalImage" class="modal-image" alt="Gallery image">
+            <button class="modal-nav-btn next" data-gallery-viewer-target="nextButton" data-action="click->gallery-viewer#nextImage">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <div class="modal-footer bg-dark">
+            <a href="#" class="btn btn-success download-btn" data-action="click->gallery-viewer#downloadImage">
+              <i class="fas fa-download me-2"></i>Download
+            </a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <p>&copy; <%= Date.current.year %> Photograph. Professional photo gallery platform.</p>
+          </div>
+          <div class="col-md-6 text-end">
+            <p>Built with Ruby on Rails and deployed on Vercel</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Touch event handlers for mobile -->
+    <div data-action="touchstart->gallery-viewer#touchStart touchend->gallery-viewer#touchEnd"></div>
+  </body>
+</html>

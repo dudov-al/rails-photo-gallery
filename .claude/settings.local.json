@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:klara.demo.vigbo.com)",
+      "Bash(rails new:*)",
+      "Bash(gem install:*)",
+      "Bash(rails --version)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(bundle install:*)",
+      "Bash(ruby:*)",
+      "Bash(rails routes)",
+      "Bash(bundle exec rails:*)",
+      "Bash(node:*)",
+      "Bash(bundle audit:*)",
+      "Bash(bundle list:*)",
+      "Bash(rails generate:*)",
+      "Bash(cp:*)",
+      "Bash(rails:*)",
+      "Bash(bundle --version)",
+      "Bash(find:*)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

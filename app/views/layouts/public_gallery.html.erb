@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for?(:title) ? "#{content_for(:title)} - Photograph" : "Professional Photo Gallery - Photograph" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#FEFCF8">
+    
+    <%= content_for :head %>
+    
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  </head>
+
+  <body class="public-gallery-body" data-controller="public-gallery">
+    <!-- Screen reader skip link -->
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <!-- Main Content -->
+    <main id="main-content" role="main">
+      <%= yield %>
+    </main>
+
+    <!-- Minimal Footer for Public Galleries -->
+    <footer class="public-gallery-footer" role="contentinfo">
+      <div class="footer-content">
+        <p class="footer-brand">
+          <strong>Photograph</strong> - Professional photo galleries
+        </p>
+        <p class="footer-disclaimer">
+          <small>Photos are the property of their respective photographers. Unauthorized use is prohibited.</small>
+        </p>
+      </div>
+    </footer>
+
+    <!-- Alert/Notice Flash Messages -->
+    <% if notice %>
+      <div class="flash-message flash-notice" role="alert">
+        <%= notice %>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="flash-message flash-alert" role="alert">
+        <%= alert %>
+      </div>
+    <% end %>
+
+    <!-- Enhanced Error Boundary for Production -->
+    <script>
+      window.addEventListener('error', function(e) {
+        console.error('Gallery Error:', e.error);
+        // In production, you might want to track these errors
+      });
+
+      // Prevent right-click on images (basic protection)
+      document.addEventListener('contextmenu', function(e) {
+        if (e.target.tagName === 'IMG' && e.target.closest('.public-gallery-grid')) {
+          e.preventDefault();
+        }
+      });
+
+      // Prevent drag on images
+      document.addEventListener('dragstart', function(e) {
+        if (e.target.tagName === 'IMG') {
+          e.preventDefault();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "config.ru",
+      "use": "@vercel/ruby",
+      "config": {
+        "includeFiles": [
+          "**",
+          ".bundle/**"
+        ],
+        "excludeFiles": [
+          "spec/**",
+          "test/**",
+          "*.log",
+          "tmp/**",
+          "log/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/public/assets/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "src": "/packs/(.*)",
+      "dest": "/public/packs/$1", 
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "src": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webp|avif))",
+      "dest": "/public/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "x-content-type-options": "nosniff",
+        "vary": "Accept-Encoding"
+      }
+    },
+    {
+      "src": "/rails/active_storage/representations/(.*)",
+      "headers": {
+        "cache-control": "public, max-age=86400, stale-while-revalidate=3600",
+        "x-content-type-options": "nosniff"
+      },
+      "dest": "/config.ru"
+    },
+    {
+      "src": "/public_galleries/([^/]+)",
+      "headers": {
+        "cache-control": "public, max-age=300, stale-while-revalidate=60",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff"
+      },
+      "dest": "/config.ru"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/config.ru"
+    }
+  ],
+  "env": {
+    "RACK_ENV": "production",
+    "RAILS_ENV": "production",
+    "RAILS_SERVE_STATIC_FILES": "true",
+    "RAILS_LOG_TO_STDOUT": "true",
+    "SECRET_KEY_BASE": "@secret_key_base",
+    "RAILS_MAX_THREADS": "10",
+    "WEB_CONCURRENCY": "1",
+    "RUBY_GC_HEAP_INIT_SLOTS": "10000",
+    "RUBY_GC_HEAP_FREE_SLOTS": "4000",
+    "RUBY_GC_HEAP_GROWTH_FACTOR": "1.8",
+    "RUBY_GC_MALLOC_LIMIT": "16777216"
+  },
+  "functions": {
+    "config.ru": {
+      "runtime": "@vercel/ruby@3.0.1",
+      "maxDuration": 30,
+      "memory": 1024,
+      "regions": ["iad1"]
+    }
+  },
+  "regions": [
+    "iad1"
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options", 
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
+EOF < /dev/null

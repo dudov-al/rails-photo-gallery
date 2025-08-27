@@ -1,0 +1,410 @@
+<% # Shared form partial for galleries - handles both new and edit actions %>
+<%= form_with model: @gallery, 
+              local: true, 
+              class: "gallery-form",
+              data: { 
+                controller: "auth-form gallery-form",
+                auth_form_target: "form",
+                action: "submit->auth-form#handleSubmit" 
+              },
+              novalidate: true do |form| %>
+  
+  <!-- Title Field -->
+  <div class="form-group mb-4">
+    <%= form.label :title, "Gallery Title", class: "form-label" %>
+    <%= form.text_field :title, 
+        class: "form-control #{'is-invalid' if @gallery.errors[:title].any?}",
+        placeholder: "Enter a descriptive title for your gallery",
+        required: true,
+        maxlength: 255,
+        data: { 
+          auth_form_target: "titleField",
+          action: "input->auth-form#clearFieldError"
+        },
+        aria: { 
+          describedby: @gallery.errors[:title].any? ? "title-error" : "title-help"
+        } %>
+    <% if @gallery.errors[:title].any? %>
+      <div class="invalid-feedback" id="title-error" role="alert" aria-live="polite">
+        <%= @gallery.errors[:title].first %>
+      </div>
+    <% else %>
+      <div class="form-text" id="title-help">
+        A clear, descriptive title helps viewers understand your gallery's content
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- Description Field -->
+  <div class="form-group mb-4">
+    <%= form.label :description, "Description", class: "form-label" %>
+    <%= form.text_area :description, 
+        class: "form-control #{'is-invalid' if @gallery.errors[:description].any?}",
+        placeholder: "Describe your gallery (optional)",
+        rows: 4,
+        maxlength: 2000,
+        data: { 
+          auth_form_target: "descriptionField",
+          action: "input->auth-form#clearFieldError"
+        },
+        aria: { 
+          describedby: @gallery.errors[:description].any? ? "description-error" : "description-help"
+        } %>
+    <% if @gallery.errors[:description].any? %>
+      <div class="invalid-feedback" id="description-error" role="alert" aria-live="polite">
+        <%= @gallery.errors[:description].first %>
+      </div>
+    <% else %>
+      <div class="form-text" id="description-help">
+        Optional description to provide context about your gallery
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- Gallery Settings -->
+  <div class="form-section mb-4">
+    <h5 class="form-section-title">Gallery Settings</h5>
+    
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <div class="form-check form-switch">
+          <%= form.check_box :published, 
+              class: "form-check-input",
+              data: { 
+                action: "change->gallery-form#togglePublishedState"
+              } %>
+          <%= form.label :published, "Published", class: "form-check-label" %>
+          <div class="form-text">
+            Published galleries can be viewed by others with the link
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6 mb-3">
+        <div class="form-check form-switch">
+          <%= form.check_box :featured, 
+              class: "form-check-input" %>
+          <%= form.label :featured, "Featured", class: "form-check-label" %>
+          <div class="form-text">
+            Featured galleries appear prominently in your portfolio
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Password Protection -->
+  <div class="form-section mb-4">
+    <h5 class="form-section-title">
+      Password Protection 
+      <small class="text-muted">(Optional)</small>
+    </h5>
+    
+    <div class="form-check form-switch mb-3">
+      <input type="checkbox" 
+             class="form-check-input" 
+             id="enable-password"
+             data-action="change->gallery-form#togglePasswordProtection"
+             <%= 'checked' if @gallery.password_protected? || @gallery.password.present? %>>
+      <label class="form-check-label" for="enable-password">
+        Enable password protection
+      </label>
+      <div class="form-text">
+        Require a password to view this gallery
+      </div>
+    </div>
+    
+    <div class="password-protection-fields" 
+         data-gallery-form-target="passwordFields"
+         style="<%= 'display: none;' unless @gallery.password_protected? || @gallery.password.present? %>">
+      
+      <div class="form-group mb-3">
+        <%= form.label :password, "Password", class: "form-label" %>
+        <div class="password-field">
+          <%= form.password_field :password, 
+              class: "form-control #{'is-invalid' if @gallery.errors[:password].any?}",
+              placeholder: @gallery.persisted? ? "Enter new password (leave blank to keep current)" : "Create a secure password",
+              autocomplete: "new-password",
+              data: { 
+                auth_form_target: "passwordField",
+                action: "input->auth-form#clearFieldError input->auth-form#checkPasswordStrength"
+              },
+              aria: { 
+                describedby: @gallery.errors[:password].any? ? "password-error" : "password-help"
+              } %>
+          <button type="button" 
+                  class="password-toggle"
+                  data-action="click->auth-form#togglePasswordVisibility"
+                  data-auth-form-target="passwordToggle"
+                  aria-label="Toggle password visibility"
+                  tabindex="-1">
+            <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <% if @gallery.errors[:password].any? %>
+          <div class="invalid-feedback" id="password-error" role="alert" aria-live="polite">
+            <%= @gallery.errors[:password].first %>
+          </div>
+        <% else %>
+          <div class="form-text" id="password-help">
+            Password must be at least 8 characters with uppercase, lowercase, and number
+          </div>
+        <% end %>
+        
+        <!-- Password Strength Indicator -->
+        <div class="password-strength" data-auth-form-target="passwordStrength" style="display: none;">
+          <div class="password-strength-bar">
+            <div class="password-strength-fill" data-auth-form-target="passwordStrengthFill"></div>
+          </div>
+          <small class="password-strength-text" data-auth-form-target="passwordStrengthText"></small>
+        </div>
+      </div>
+      
+      <div class="form-group mb-3">
+        <%= form.label :password_confirmation, "Confirm Password", class: "form-label" %>
+        <div class="password-field">
+          <%= form.password_field :password_confirmation, 
+              class: "form-control #{'is-invalid' if @gallery.errors[:password_confirmation].any?}",
+              placeholder: "Re-enter your password",
+              autocomplete: "new-password",
+              data: { 
+                auth_form_target: "passwordConfirmationField",
+                action: "input->auth-form#clearFieldError input->auth-form#checkPasswordMatch"
+              },
+              aria: { 
+                describedby: @gallery.errors[:password_confirmation].any? ? "password-confirmation-error" : nil
+              } %>
+          <button type="button" 
+                  class="password-toggle"
+                  data-action="click->auth-form#togglePasswordVisibility"
+                  data-auth-form-target="passwordConfirmationToggle"
+                  aria-label="Toggle password confirmation visibility"
+                  tabindex="-1">
+            <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <% if @gallery.errors[:password_confirmation].any? %>
+          <div class="invalid-feedback" id="password-confirmation-error" role="alert" aria-live="polite">
+            <%= @gallery.errors[:password_confirmation].first %>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if @gallery.persisted? && @gallery.password_protected? %>
+        <div class="form-check mb-3">
+          <input type="checkbox" 
+                 class="form-check-input" 
+                 id="clear-password"
+                 name="clear_password"
+                 value="1">
+          <label class="form-check-label text-warning" for="clear-password">
+            Remove password protection from this gallery
+          </label>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Expiration Settings -->
+  <div class="form-section mb-4">
+    <h5 class="form-section-title">
+      Expiration Settings 
+      <small class="text-muted">(Optional)</small>
+    </h5>
+    
+    <div class="form-check form-switch mb-3">
+      <input type="checkbox" 
+             class="form-check-input" 
+             id="enable-expiration"
+             data-action="change->gallery-form#toggleExpiration"
+             <%= 'checked' if @gallery.expires_at.present? %>>
+      <label class="form-check-label" for="enable-expiration">
+        Set expiration date
+      </label>
+      <div class="form-text">
+        Gallery will become unavailable after this date
+      </div>
+    </div>
+    
+    <div class="expiration-fields" 
+         data-gallery-form-target="expirationFields"
+         style="<%= 'display: none;' unless @gallery.expires_at.present? %>">
+      <div class="form-group">
+        <%= form.label :expires_at, "Expiration Date & Time", class: "form-label" %>
+        <%= form.datetime_local_field :expires_at, 
+            class: "form-control #{'is-invalid' if @gallery.errors[:expires_at].any?}",
+            min: Date.current.strftime("%Y-%m-%dT%H:%M"),
+            data: { 
+              action: "input->auth-form#clearFieldError"
+            },
+            aria: { 
+              describedby: @gallery.errors[:expires_at].any? ? "expires-at-error" : "expires-at-help"
+            } %>
+        <% if @gallery.errors[:expires_at].any? %>
+          <div class="invalid-feedback" id="expires-at-error" role="alert" aria-live="polite">
+            <%= @gallery.errors[:expires_at].first %>
+          </div>
+        <% else %>
+          <div class="form-text" id="expires-at-help">
+            Choose when this gallery should stop being accessible
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading and Error States -->
+  <div class="auth-alerts" data-auth-form-target="alerts" role="alert" aria-live="assertive"></div>
+  
+  <!-- Form Actions -->
+  <div class="form-actions d-flex gap-3 flex-wrap">
+    <% if @gallery.persisted? %>
+      <%= form.submit "Update Gallery", 
+          class: "btn btn-primary",
+          data: { 
+            auth_form_target: "submitButton",
+            disable_with: "Updating gallery..."
+          } %>
+      <%= link_to "Cancel", galleries_path, 
+          class: "btn btn-outline-secondary" %>
+    <% else %>
+      <%= form.submit "Create Gallery", 
+          class: "btn btn-primary",
+          data: { 
+            auth_form_target: "submitButton",
+            disable_with: "Creating gallery..."
+          } %>
+      <%= form.submit "Create and Add Images", 
+          class: "btn btn-success",
+          name: "commit",
+          data: { 
+            disable_with: "Creating gallery..."
+          } %>
+      <%= link_to "Cancel", galleries_path, 
+          class: "btn btn-outline-secondary" %>
+    <% end %>
+  </div>
+<% end %>
+
+<style nonce="<%= content_security_policy_nonce %>">
+/* Gallery Form Styles */
+.gallery-form {
+  max-width: 800px;
+}
+
+.form-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.form-section-title {
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.password-protection-fields,
+.expiration-fields {
+  background: white;
+  border-radius: 6px;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.password-toggle:hover {
+  color: #495057;
+}
+
+.password-toggle-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+}
+
+.password-strength-bar {
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.password-strength-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.form-actions {
+  padding-top: 2rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: 2rem;
+}
+
+.form-switch .form-check-input {
+  margin-top: 0.125rem;
+}
+
+.form-switch .form-check-label {
+  font-weight: 500;
+}
+
+/* Loading states */
+.form-loading .form-control {
+  opacity: 0.7;
+}
+
+.form-loading .btn:not(.btn-outline-secondary) {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+}
+</style>

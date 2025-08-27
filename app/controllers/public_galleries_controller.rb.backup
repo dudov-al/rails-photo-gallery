@@ -1,0 +1,108 @@
+class PublicGalleriesController < ApplicationController
+  layout 'public_gallery'
+  
+  before_action :find_gallery, only: [:show, :authenticate, :download, :download_all]
+  before_action :check_gallery_access, only: [:show, :download_all]
+  before_action :authenticate_gallery_password, only: [:show, :download_all], if: -> { @gallery.password_protected? }
+
+  def show
+    @gallery.increment_views!
+    @images = @gallery.images.ordered.includes(file_attachment: :blob)
+    
+    # Prepare images data for JavaScript
+    @images_data = @images.map do |image|
+      {
+        id: image.id,
+        filename: image.filename,
+        thumbnail_url: image.thumbnail_url,
+        web_url: image.web_url,
+        download_url: download_image_path(@gallery.slug, image.id),
+        alt_text: image.alt_text || "#{@gallery.title} - Photo #{image.position}"
+      }
+    end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: { images: @images_data } }
+    end
+  end
+
+  def authenticate
+    if @gallery.authenticate_password(params[:password])
+      session["gallery_#{@gallery.id}_authenticated"] = true
+      redirect_to public_gallery_path(@gallery.slug), 
+                  notice: "Welcome to #{@gallery.title}"
+    else
+      @error = "Incorrect password. Please try again."
+      render :password_form, status: :unauthorized
+    end
+  end
+
+  def download
+    @image = @gallery.images.find(params[:image_id])
+    
+    # Log download for analytics
+    Rails.logger.info "Image download: Gallery #{@gallery.slug}, Image #{@image.id}, IP: #{request.remote_ip}"
+    
+    # Generate signed URL for secure download
+    download_url = @image.download_url
+    redirect_to download_url, allow_other_host: true
+  rescue ActiveRecord::RecordNotFound
+    redirect_to public_gallery_path(@gallery.slug), 
+                alert: "Image not found"
+  end
+
+  def download_all
+    # Log bulk download for analytics
+    Rails.logger.info "Bulk download: Gallery #{@gallery.slug}, #{@gallery.images.count} images, IP: #{request.remote_ip}"
+    
+    # For now, redirect to individual downloads
+    # In production, this would create a ZIP file with all images
+    # Implementation would depend on whether you want to:
+    # 1. Generate ZIP on-the-fly (slower but always current)
+    # 2. Pre-generate ZIP files (faster but requires background jobs)
+    # 3. Use a service like CloudZip for large galleries
+    
+    respond_to do |format|
+      format.html do
+        # For demo purposes, show a message about bulk download
+        flash[:notice] = "Bulk download feature coming soon! Download individual images for now."
+        redirect_to public_gallery_path(@gallery.slug)
+      end
+      format.json do
+        # Return URLs for individual downloads for client-side handling
+        download_urls = @gallery.images.map do |image|
+          {
+            filename: image.filename,
+            url: download_image_path(@gallery.slug, image.id)
+          }
+        end
+        render json: { downloads: download_urls }
+      end
+    end
+  end
+
+  private
+
+  def find_gallery
+    @gallery = Gallery.published.not_expired.find_by!(slug: params[:slug])
+  rescue ActiveRecord::RecordNotFound
+    render :not_found, status: :not_found
+  end
+
+  def check_gallery_access
+    unless @gallery.viewable?
+      if @gallery.expired?
+        render :expired, status: :gone
+      else
+        render :not_found, status: :not_found
+      end
+    end
+  end
+
+  def authenticate_gallery_password
+    return if session["gallery_#{@gallery.id}_authenticated"]
+    
+    render :password_form, status: :unauthorized
+  end
+end

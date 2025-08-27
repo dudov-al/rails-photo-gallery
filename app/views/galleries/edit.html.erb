@@ -1,0 +1,621 @@
+<% content_for :title, "Edit Gallery - #{@gallery.title}" %>
+<% content_for :description, "Edit gallery settings and details" %>
+
+<div class="skip-link">
+  <a href="#main-content">Skip to main content</a>
+</div>
+
+<main id="main-content" class="gallery-page">
+  <div class="container py-4">
+    <!-- Header -->
+    <header class="gallery-header mb-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <div class="d-flex align-items-center mb-2">
+            <svg class="me-2 text-primary" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <h1 class="h3 mb-0">Edit Gallery</h1>
+          </div>
+          <p class="text-muted mb-0">
+            Update settings for "<strong><%= @gallery.title %></strong>"
+          </p>
+        </div>
+        <div class="col-md-4 text-end">
+          <div class="btn-group" role="group">
+            <%= link_to galleries_path, 
+                class: "btn btn-outline-secondary",
+                data: { bs_toggle: "tooltip", title: "Back to galleries" } do %>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M19 12H5"/>
+                <polyline points="12,19 5,12 12,5"/>
+              </svg>
+              Back
+            <% end %>
+            
+            <% if @gallery.viewable? %>
+              <%= link_to public_gallery_path(@gallery.slug), 
+                  class: "btn btn-outline-success",
+                  target: "_blank",
+                  data: { bs_toggle: "tooltip", title: "View public gallery" } do %>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                View Gallery
+              <% end %>
+            <% end %>
+            
+            <%= link_to gallery_images_path(@gallery), 
+                class: "btn btn-primary",
+                data: { bs_toggle: "tooltip", title: "Manage gallery images" } do %>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+              </svg>
+              Manage Images
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="row">
+      <!-- Main Form -->
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="9" cy="9" r="2"/>
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+                <h5 class="card-title mb-0">Gallery Details</h5>
+              </div>
+              <div class="gallery-status">
+                <% if @gallery.published? %>
+                  <span class="badge bg-success">Published</span>
+                <% else %>
+                  <span class="badge bg-secondary">Draft</span>
+                <% end %>
+                <% if @gallery.featured? %>
+                  <span class="badge bg-warning">Featured</span>
+                <% end %>
+                <% if @gallery.password_protected? %>
+                  <span class="badge bg-info">Protected</span>
+                <% end %>
+                <% if @gallery.expired? %>
+                  <span class="badge bg-danger">Expired</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <%= render 'form' %>
+          </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card border-danger">
+          <div class="card-header bg-danger text-white">
+            <div class="d-flex align-items-center">
+              <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <h6 class="card-title mb-0">Danger Zone</h6>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="text-danger mb-1">Delete Gallery</h6>
+                <p class="text-muted small mb-0">
+                  Permanently delete this gallery and all its images. This action cannot be undone.
+                </p>
+              </div>
+              <button type="button" 
+                      class="btn btn-outline-danger"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#deleteGalleryModal">
+                Delete Gallery
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- Gallery Statistics -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="d-flex align-items-center">
+              <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <h6 class="card-title mb-0">Gallery Statistics</h6>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-value text-primary">
+                  <%= @gallery.images.count %>
+                </div>
+                <div class="stat-label">Images</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value text-success">
+                  <%= @gallery.views_count %>
+                </div>
+                <div class="stat-label">Views</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value text-info">
+                  <%= time_ago_in_words(@gallery.created_at) %>
+                </div>
+                <div class="stat-label">Age</div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-value text-warning">
+                  <%= time_ago_in_words(@gallery.updated_at) %>
+                </div>
+                <div class="stat-label">Last Updated</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gallery Information -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="d-flex align-items-center">
+              <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6h.01"/>
+                <path d="M12 12v6"/>
+              </svg>
+              <h6 class="card-title mb-0">Gallery Information</h6>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="info-list">
+              <div class="info-item">
+                <strong>Slug:</strong>
+                <code class="ms-2"><%= @gallery.slug %></code>
+              </div>
+              
+              <div class="info-item">
+                <strong>Created:</strong>
+                <span class="ms-2"><%= @gallery.created_at.strftime("%B %d, %Y at %I:%M %p") %></span>
+              </div>
+              
+              <div class="info-item">
+                <strong>Status:</strong>
+                <span class="ms-2">
+                  <% if @gallery.published? %>
+                    <span class="text-success">Published</span>
+                  <% else %>
+                    <span class="text-secondary">Draft</span>
+                  <% end %>
+                </span>
+              </div>
+              
+              <% if @gallery.expires_at.present? %>
+                <div class="info-item">
+                  <strong>Expires:</strong>
+                  <span class="ms-2 <%= @gallery.expired? ? 'text-danger' : 'text-warning' %>">
+                    <%= @gallery.expires_at.strftime("%B %d, %Y at %I:%M %p") %>
+                    <% if @gallery.expired? %>
+                      <small>(Expired)</small>
+                    <% end %>
+                  </span>
+                </div>
+              <% end %>
+              
+              <% if @gallery.password_protected? %>
+                <div class="info-item">
+                  <strong>Protection:</strong>
+                  <span class="ms-2 text-info">
+                    Password protected
+                    <small class="text-muted">(<%= @gallery.password_strength_text %>)</small>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex align-items-center">
+              <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <polyline points="9,11 12,14 22,4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <%= link_to gallery_images_path(@gallery), 
+                  class: "btn btn-outline-primary btn-sm" do %>
+                <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="9" cy="9" r="2"/>
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+                Manage Images
+              <% end %>
+              
+              <%= link_to "#", 
+                  class: "btn btn-outline-secondary btn-sm",
+                  data: { 
+                    bs_toggle: "modal", 
+                    bs_target: "#duplicateGalleryModal"
+                  } do %>
+                <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Duplicate Gallery
+              <% end %>
+              
+              <% if @gallery.viewable? %>
+                <%= link_to public_gallery_path(@gallery.slug), 
+                    class: "btn btn-outline-success btn-sm",
+                    target: "_blank" do %>
+                  <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  View Public Gallery
+                <% end %>
+              <% end %>
+              
+              <button type="button" 
+                      class="btn btn-outline-info btn-sm"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#shareGalleryModal">
+                <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71"/>
+                </svg>
+                Share Gallery
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Delete Gallery Modal -->
+<div class="modal fade" id="deleteGalleryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-danger">Delete Gallery</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <div class="d-flex">
+            <svg class="me-2 mt-1 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+              <strong>This action cannot be undone!</strong>
+              <p class="mb-0 mt-1">This will permanently delete the gallery and all its images.</p>
+            </div>
+          </div>
+        </div>
+        
+        <p class="mb-3">
+          You are about to delete <strong>"<%= @gallery.title %>"</strong> 
+          which contains <strong><%= pluralize(@gallery.images.count, 'image') %></strong>.
+        </p>
+        
+        <p class="mb-3">To confirm deletion, please type the gallery's slug below:</p>
+        
+        <%= form_with url: gallery_path(@gallery), method: :delete, id: "deleteGalleryForm", class: "mt-3" do |f| %>
+          <div class="mb-3">
+            <label class="form-label">Gallery slug:</label>
+            <input type="text" 
+                   name="confirm_delete" 
+                   class="form-control" 
+                   id="deleteSlugInput" 
+                   placeholder="Type the gallery slug here" 
+                   required>
+            <div class="form-text">
+              Slug: <code><%= @gallery.slug %></code>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="deleteGalleryForm" class="btn btn-danger">Delete Gallery</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate Gallery Modal -->
+<div class="modal fade" id="duplicateGalleryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Duplicate Gallery</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex">
+          <svg class="me-3 mt-1 text-info flex-shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <div>
+            <p class="mb-2">
+              Create a copy of <strong>"<%= @gallery.title %>"</strong>?
+            </p>
+            <ul class="text-muted small mb-0">
+              <li>The duplicated gallery will be unpublished</li>
+              <li>Password protection will be removed</li>
+              <li>Images will NOT be duplicated (you'll need to add them separately)</li>
+              <li>You can customize the copy before sharing</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <%= link_to duplicate_gallery_path(@gallery), 
+            method: :post,
+            class: "btn btn-primary" do %>
+          Duplicate Gallery
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Gallery Modal -->
+<div class="modal fade" id="shareGalleryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Share Gallery</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <% if @gallery.viewable? %>
+          <div class="mb-3">
+            <label class="form-label">Gallery URL:</label>
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control" 
+                     id="galleryUrl"
+                     value="<%= public_gallery_url(@gallery.slug) %>" 
+                     readonly>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="copyGalleryUrl()">
+                Copy
+              </button>
+            </div>
+          </div>
+          
+          <% if @gallery.password_protected? %>
+            <div class="alert alert-info">
+              <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <circle cx="12" cy="16" r="1"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              This gallery is password protected. Viewers will need the password to access it.
+            </div>
+          <% end %>
+        <% else %>
+          <div class="alert alert-warning">
+            <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <strong>Gallery not viewable</strong>
+            <p class="mb-0 mt-1">
+              This gallery is not published or has expired and cannot be shared publicly.
+            </p>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <% if @gallery.viewable? %>
+          <a href="<%= public_gallery_url(@gallery.slug) %>" 
+             target="_blank" 
+             class="btn btn-primary">
+            Open Gallery
+          </a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script nonce="<%= content_security_policy_nonce %>">
+// Copy gallery URL functionality
+function copyGalleryUrl() {
+  const urlInput = document.getElementById('galleryUrl')
+  urlInput.select()
+  urlInput.setSelectionRange(0, 99999) // For mobile devices
+  
+  try {
+    document.execCommand('copy')
+    
+    // Show feedback
+    const copyBtn = event.target
+    const originalText = copyBtn.textContent
+    copyBtn.textContent = 'Copied!'
+    copyBtn.classList.add('btn-success')
+    copyBtn.classList.remove('btn-outline-secondary')
+    
+    setTimeout(() => {
+      copyBtn.textContent = originalText
+      copyBtn.classList.remove('btn-success')
+      copyBtn.classList.add('btn-outline-secondary')
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy URL', err)
+  }
+}
+
+// Delete confirmation
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteModal = document.getElementById('deleteGalleryModal')
+  const deleteForm = document.getElementById('deleteGalleryForm')
+  const deleteInput = document.getElementById('deleteSlugInput')
+  const deleteButton = deleteForm.querySelector('button[type="submit"]')
+  const expectedSlug = '<%= @gallery.slug %>'
+  
+  if (deleteInput && deleteButton) {
+    deleteInput.addEventListener('input', function() {
+      if (this.value === expectedSlug) {
+        deleteButton.disabled = false
+        deleteButton.classList.remove('disabled')
+      } else {
+        deleteButton.disabled = true
+        deleteButton.classList.add('disabled')
+      }
+    })
+    
+    // Initially disable the button
+    deleteButton.disabled = true
+    deleteButton.classList.add('disabled')
+  }
+  
+  // Clear input when modal opens
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', function() {
+      deleteInput.value = ''
+      deleteButton.disabled = true
+      deleteButton.classList.add('disabled')
+    })
+  }
+})
+</script>
+
+<style nonce="<%= content_security_policy_nonce %>">
+/* Edit page specific styles */
+.gallery-status .badge {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+/* Statistics grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+/* Info list styling */
+.info-list .info-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f3f4;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.info-list .info-item:last-child {
+  border-bottom: none;
+}
+
+.info-list .info-item strong {
+  flex-shrink: 0;
+  width: 90px;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+/* Modal improvements */
+.modal-content {
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gallery-header .row {
+    flex-direction: column;
+  }
+  
+  .gallery-header .col-md-4 {
+    margin-top: 1rem;
+    text-align: left !important;
+  }
+  
+  .btn-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .btn-group .btn {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .info-list .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .info-list .info-item strong {
+    width: auto;
+    margin-bottom: 0.25rem;
+  }
+}
+</style>

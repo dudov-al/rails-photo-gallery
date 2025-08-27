@@ -1,0 +1,196 @@
+<% content_for :title, "Photographer Login" %>
+<% content_for :description, "Secure photographer login to access your galleries" %>
+
+<div class="skip-link">
+  <a href="#main-content">Skip to main content</a>
+</div>
+
+<main id="main-content" class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card" data-controller="auth-form">
+      <!-- Header -->
+      <header class="auth-header">
+        <div class="auth-brand">
+          <svg class="auth-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="m9 9 3-3 3 3"/>
+            <path d="m9 15 3-3 3 3"/>
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+          <h1 class="auth-title">Photographer Login</h1>
+        </div>
+        <p class="auth-subtitle">
+          Access your professional photo gallery management
+        </p>
+      </header>
+
+      <!-- Login Form -->
+      <%= form_with model: @photographer, 
+                    url: login_path, 
+                    local: true, 
+                    class: "auth-form",
+                    data: { 
+                      auth_form_target: "form",
+                      action: "submit->auth-form#handleSubmit" 
+                    },
+                    novalidate: true do |form| %>
+        
+        <div class="form-group">
+          <%= form.label :email, "Email Address", class: "form-label" %>
+          <%= form.email_field :email, 
+              class: "form-control #{'is-invalid' if @photographer&.errors&.[](:email)&.present?}",
+              placeholder: "photographer@example.com",
+              required: true,
+              autocomplete: "username",
+              data: { 
+                auth_form_target: "emailField",
+                action: "input->auth-form#clearFieldError"
+              },
+              aria: { 
+                describedby: @photographer&.errors&.[](:email)&.present? ? "email-error" : nil
+              } %>
+          <% if @photographer&.errors&.[](:email)&.present? %>
+            <div class="invalid-feedback" id="email-error" role="alert" aria-live="polite">
+              <%= @photographer.errors[:email].first %>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :password, "Password", class: "form-label" %>
+          <div class="password-field">
+            <%= form.password_field :password, 
+                class: "form-control #{'is-invalid' if @photographer&.errors&.[](:password)&.present?}",
+                placeholder: "Enter your secure password",
+                required: true,
+                autocomplete: "current-password",
+                data: { 
+                  auth_form_target: "passwordField",
+                  action: "input->auth-form#clearFieldError"
+                },
+                aria: { 
+                  describedby: @photographer&.errors&.[](:password)&.present? ? "password-error" : nil
+                } %>
+            <button type="button" 
+                    class="password-toggle"
+                    data-action="click->auth-form#togglePasswordVisibility"
+                    data-auth-form-target="passwordToggle"
+                    aria-label="Toggle password visibility"
+                    tabindex="-1">
+              <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <% if @photographer&.errors&.[](:password)&.present? %>
+            <div class="invalid-feedback" id="password-error" role="alert" aria-live="polite">
+              <%= @photographer.errors[:password].first %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="form-group form-check-group">
+          <label class="form-check">
+            <input type="checkbox" 
+                   class="form-check-input" 
+                   id="remember-device"
+                   data-auth-form-target="rememberDevice">
+            <span class="form-check-label">
+              Keep me signed in for 30 days
+            </span>
+          </label>
+        </div>
+        
+        <!-- Loading and Error States -->
+        <div class="auth-alerts" data-auth-form-target="alerts" role="alert" aria-live="assertive"></div>
+        
+        <div class="form-actions">
+          <%= form.submit "Sign In", 
+              class: "btn btn-primary btn-full",
+              data: { 
+                auth_form_target: "submitButton",
+                disable_with: "Signing in..."
+              } %>
+        </div>
+      <% end %>
+      
+      <!-- Alternative Actions -->
+      <div class="auth-divider">
+        <span>New to Photograph?</span>
+      </div>
+      
+      <div class="auth-actions">
+        <%= link_to "Create Your Account", register_path, 
+            class: "btn btn-outline btn-full" %>
+      </div>
+      
+      <div class="auth-help">
+        <%= link_to "Forgot your password?", "#", 
+            class: "auth-link",
+            data: { action: "click->auth-form#handleForgotPassword" } %>
+      </div>
+    </div>
+    
+    <!-- Security Notice -->
+    <div class="auth-security-notice" role="complementary" aria-label="Security information">
+      <div class="security-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="security-text">
+        <p class="security-title">Your Security Matters</p>
+        <p class="security-description">
+          Accounts are temporarily locked after 5 failed attempts. 
+          We use industry-standard encryption and security measures.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script nonce="<%= content_security_policy_nonce %>">
+document.addEventListener('DOMContentLoaded', function() {
+  // Password visibility toggle
+  const toggleButton = document.getElementById('toggle-password');
+  const passwordInput = document.getElementById('password-input');
+  const toggleIcon = document.getElementById('toggle-icon');
+  
+  if (toggleButton && passwordInput && toggleIcon) {
+    toggleButton.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      toggleIcon.classList.toggle('fa-eye');
+      toggleIcon.classList.toggle('fa-eye-slash');
+    });
+  }
+  
+  // Form validation
+  const form = document.querySelector('.needs-validation');
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  }
+  
+  // Rate limiting warning
+  let attemptCount = 0;
+  form?.addEventListener('submit', function() {
+    attemptCount++;
+    if (attemptCount >= 3) {
+      const submitBtn = form.querySelector('input[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        setTimeout(() => {
+          submitBtn.disabled = false;
+        }, 5000);
+      }
+    }
+  });
+});
+</script>

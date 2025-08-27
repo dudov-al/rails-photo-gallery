@@ -1,0 +1,162 @@
+/* Critical CSS for above-the-fold content */
+/* This should be inlined in the head for fastest rendering */
+
+:root {
+  --white: #FFFFFF;
+  --cream: #FEFCF8;
+  --light-gray: #F8F6F3;
+  --medium-gray: #E5E1DB;
+  --text-gray: #4A4A4A;
+  --dark-gray: #2C2C2C;
+  --warm-accent: #D4C4B0;
+  --button-bg: #2C2C2C;
+  --font-primary: 'Crimson Text', Georgia, serif;
+  --font-secondary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+}
+
+/* Critical layout styles */
+body {
+  font-family: var(--font-secondary);
+  color: var(--text-gray);
+  background-color: var(--cream);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.public-gallery-header {
+  background: var(--cream);
+  border-bottom: 1px solid var(--medium-gray);
+  padding: var(--spacing-2xl) 0;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gallery-title {
+  font-family: var(--font-primary);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--dark-gray);
+  margin: 0 0 var(--spacing-sm) 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.gallery-info {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+}
+
+/* Critical grid layout - above the fold */
+.public-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.public-gallery-item {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.image-container img.loaded {
+  opacity: 1;
+}
+
+.image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--light-gray) 0%,
+    color-mix(in srgb, var(--light-gray) 98%, white 2%) 50%,
+    var(--light-gray) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Hide non-critical content initially */
+.public-download-overlay,
+.public-lightbox {
+  display: none;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-lg);
+  }
+  
+  .gallery-title {
+    font-size: 2rem;
+  }
+  
+  .public-gallery-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    padding: var(--spacing-md);
+  }
+}
+
+/* Prefers-reduced-motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms \!important;
+    animation-iteration-count: 1 \!important;
+    transition-duration: 0.01ms \!important;
+  }
+  
+  .image-placeholder {
+    animation: none;
+    background: var(--light-gray);
+  }
+}
+EOF < /dev/null
