@@ -37,8 +37,8 @@ WORKDIR /app
 # Copy Gemfile and Gemfile.lock
 COPY --chown=rails:rails Gemfile Gemfile.lock ./
 
-# Install gems
-RUN bundle config set --local deployment 'true' && \
+# Install gems (force clean install)
+RUN bundle config set --local deployment 'false' && \
     bundle config set --local without 'development test' && \
     bundle config set --local path 'vendor/bundle' && \
     bundle install && \
