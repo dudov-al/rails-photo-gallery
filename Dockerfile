@@ -34,8 +34,8 @@ RUN addgroup -g 1001 -S rails && \
 # Set working directory
 WORKDIR /app
 
-# Copy Gemfile and Gemfile.lock
-COPY --chown=rails:rails Gemfile Gemfile.lock ./
+# Copy Gemfile (no Gemfile.lock for fresh gem resolution)
+COPY --chown=rails:rails Gemfile ./
 
 # Install gems (force clean install)
 RUN bundle config set --local deployment 'false' && \
