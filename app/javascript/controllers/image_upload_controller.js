@@ -108,14 +108,33 @@ export default class extends Controller {
 
   async uploadMultipleFiles(files) {
     this.uploadQueue = [...files]
-    const uploadPromises = files.map(file => this.uploadFile(file))
+    this.showUploadProgress(files)
+    
+    // Create progress tracking for each file
+    const uploadPromises = files.map((file, index) => this.uploadFileWithProgress(file, index))
     
     try {
-      await Promise.allSettled(uploadPromises)
+      const results = await Promise.allSettled(uploadPromises)
+      
+      // Process results
+      const successful = results.filter(r => r.status === 'fulfilled').length
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (successful > 0) {
+        this.showToast(`Successfully uploaded ${successful} image${successful > 1 ? 's' : ''}`, 'success')
+      }
+      
+      if (failed > 0) {
+        this.showToast(`Failed to upload ${failed} image${failed > 1 ? 's' : ''}`, 'error')
+      }
+      
     } catch (error) {
       console.error('Error uploading files:', error)
+      this.showToast('Upload process encountered errors', 'error')
     } finally {
-      this.hideProgress()
+      setTimeout(() => {
+        this.hideUploadProgress()
+      }, 2000) // Keep progress visible briefly for user feedback
       this.uploadQueue = []
     }
   }
@@ -340,4 +359,277 @@ export default class extends Controller {
       this.errorTarget.classList.add('d-none')
     }
   }
-}
+
+  // Enhanced upload with progress tracking
+  async uploadFileWithProgress(file, index) {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData()
+      formData.append('image[file]', file)
+      
+      const xhr = new XMLHttpRequest()
+      
+      // Set up progress tracking
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          this.updateUploadProgress(index, percentComplete, 'uploading')
+        }
+      })
+      
+      // Handle completion
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText)
+            
+            if (response.status === 'success') {
+              this.updateUploadProgress(index, 100, 'processing')
+              this.addImagePreview(response.image)
+              this.processingImages.add(response.image.id)
+              resolve(response)
+            } else {
+              this.updateUploadProgress(index, 0, 'failed', response.errors?.join(', ') || 'Upload failed')
+              reject(new Error(response.errors?.join(', ') || 'Upload failed'))
+            }
+          } catch (error) {
+            this.updateUploadProgress(index, 0, 'failed', 'Invalid server response')
+            reject(error)
+          }
+        } else {
+          this.updateUploadProgress(index, 0, 'failed', `HTTP ${xhr.status}: ${xhr.statusText}`)
+          reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`))
+        }
+      })
+      
+      // Handle errors
+      xhr.addEventListener('error', () => {
+        this.updateUploadProgress(index, 0, 'failed', 'Network error occurred')
+        reject(new Error('Network error occurred'))
+      })
+      
+      xhr.addEventListener('timeout', () => {
+        this.updateUploadProgress(index, 0, 'failed', 'Upload timeout')
+        reject(new Error('Upload timeout'))
+      })
+      
+      // Configure request
+      xhr.open('POST', `/galleries/${this.galleryIdValue}/images`)
+      xhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="csrf-token"]').content)
+      xhr.timeout = 120000 // 2 minute timeout
+      
+      // Start upload
+      xhr.send(formData)
+    })
+  }
+
+  // Enhanced upload progress display
+  showUploadProgress(files) {
+    if (this.hasProgressTarget) {
+      this.progressTarget.classList.remove('d-none')
+    }
+    
+    // Create progress container if it doesn't exist
+    let progressContainer = this.element.querySelector('.upload-progress-container')
+    if (!progressContainer) {
+      progressContainer = document.createElement('div')
+      progressContainer.className = 'upload-progress-container'
+      progressContainer.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">Upload Progress</h6>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-action="click->image-upload#cancelAllUploads">
+            Cancel All
+          </button>
+        </div>
+        <div class="upload-files-list" data-image-upload-target="uploadFilesList"></div>
+      `
+      
+      // Insert after drop zone
+      const dropZone = this.dropZoneTarget
+      dropZone.parentNode.insertBefore(progressContainer, dropZone.nextSibling)
+    }
+    
+    // Create file progress items
+    const filesList = progressContainer.querySelector('.upload-files-list')
+    filesList.innerHTML = ''
+    
+    files.forEach((file, index) => {
+      const fileItem = document.createElement('div')
+      fileItem.className = 'upload-file-item'
+      fileItem.dataset.fileIndex = index
+      
+      fileItem.innerHTML = `
+        <div class="file-info">
+          <div class="file-name" title="${file.name}">${file.name}</div>
+          <div class="file-size">${this.formatFileSize(file.size)}</div>
+        </div>
+        <div class="upload-progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="upload-status uploading">
+          <svg class="status-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+          </svg>
+          <span class="status-text">Queued</span>
+        </div>
+        <div class="upload-percentage">0%</div>
+      `
+      
+      filesList.appendChild(fileItem)
+    })
+  }
+
+  updateUploadProgress(fileIndex, percentage, status, errorMessage = null) {
+    const fileItem = this.element.querySelector(`[data-file-index="${fileIndex}"]`)
+    if (!fileItem) return
+    
+    const progressFill = fileItem.querySelector('.progress-fill')
+    const statusElement = fileItem.querySelector('.upload-status')
+    const statusIcon = fileItem.querySelector('.status-icon')
+    const statusText = fileItem.querySelector('.status-text')
+    const percentageElement = fileItem.querySelector('.upload-percentage')
+    
+    // Update progress bar
+    if (progressFill) {
+      progressFill.style.width = `${percentage}%`
+    }
+    
+    // Update percentage display
+    if (percentageElement) {
+      percentageElement.textContent = `${percentage}%`
+    }
+    
+    // Update status
+    if (statusElement) {
+      statusElement.className = `upload-status ${status}`
+    }
+    
+    // Update icon and text based on status
+    switch (status) {
+      case 'uploading':
+        statusIcon.innerHTML = '<path d="M21 12a9 9 0 11-6.219-8.56"/>'
+        statusIcon.classList.add('spinning')
+        statusText.textContent = percentage === 0 ? 'Starting...' : 'Uploading'
+        break
+        
+      case 'processing':
+        statusIcon.innerHTML = '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>'
+        statusIcon.classList.add('spinning')
+        statusText.textContent = 'Processing'
+        break
+        
+      case 'completed':
+        statusIcon.innerHTML = '<polyline points="20,6 9,17 4,12"/>'
+        statusIcon.classList.remove('spinning')
+        statusText.textContent = 'Complete'
+        break
+        
+      case 'failed':
+        statusIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+        statusIcon.classList.remove('spinning')
+        statusText.textContent = errorMessage || 'Failed'
+        statusText.title = errorMessage || 'Upload failed'
+        break
+    }
+  }
+
+  hideUploadProgress() {
+    const progressContainer = this.element.querySelector('.upload-progress-container')
+    if (progressContainer) {
+      progressContainer.style.opacity = '0.6'
+      setTimeout(() => {
+        progressContainer.remove()
+      }, 1000)
+    }
+    
+    if (this.hasProgressTarget) {
+      this.progressTarget.classList.add('d-none')
+    }
+  }
+
+  cancelAllUploads() {
+    // Cancel any ongoing uploads
+    this.uploadQueue = []
+    
+    // Hide progress immediately
+    this.hideUploadProgress()
+    
+    // Show cancellation message
+    this.showToast('Uploads cancelled', 'info')
+  }
+
+  // Enhanced drag and drop feedback
+  handleDragOver(event) {
+    event.preventDefault()
+    this.dropZoneTarget.classList.add('dragover')
+    
+    // Show visual feedback for file type validation
+    const items = event.dataTransfer.items
+    let validFiles = 0
+    let invalidFiles = 0
+    
+    for (let i = 0; i < items.length; i++) {
+      if (this.allowedTypesValue.includes(items[i].type)) {
+        validFiles++
+      } else {
+        invalidFiles++
+      }
+    }
+    
+    // Update drop zone text based on validation
+    const dropText = this.dropZoneTarget.querySelector('.upload-text')
+    if (dropText) {
+      if (invalidFiles > 0) {
+        dropText.textContent = `${validFiles} valid files, ${invalidFiles} invalid files`
+        this.dropZoneTarget.classList.add('drag-invalid')
+      } else {
+        dropText.textContent = `Drop ${validFiles} file${validFiles > 1 ? 's' : ''} to upload`
+        this.dropZoneTarget.classList.remove('drag-invalid')
+      }
+    }
+  }
+
+  handleDragLeave(event) {
+    event.preventDefault()
+    this.dropZoneTarget.classList.remove('dragover', 'drag-invalid')
+    
+    // Reset drop zone text
+    const dropText = this.dropZoneTarget.querySelector('.upload-text')
+    if (dropText) {
+      dropText.textContent = 'Drop images here or click to browse'
+    }
+  }
+
+  // Utility methods
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes'
+    
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  showToast(message, type) {
+    // Delegate to loading controller if available
+    const loadingController = this.application.getControllerForElementAndIdentifier(document.body, "loading")
+    if (loadingController) {
+      loadingController.showToast(message, type)
+    } else {
+      // Fallback to simple alert
+      if (type === 'error') {
+        this.showError(message)
+      }
+    }
+  }
+
+  // Network retry logic for failed uploads
+  async retryUpload(fileIndex, file) {
+    try {
+      this.updateUploadProgress(fileIndex, 0, 'uploading')
+      await this.uploadFileWithProgress(file, fileIndex)
+    } catch (error) {
+      console.error('Retry upload failed:', error)
+      this.updateUploadProgress(fileIndex, 0, 'failed', 'Retry failed')
+    }
+  }

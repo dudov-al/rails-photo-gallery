@@ -27,7 +27,8 @@
       "Bash(brew install:*)",
       "Bash(export:*)",
       "Bash(openssl rand:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(vercel:*)"
     ],
     "deny": [],
     "ask": []

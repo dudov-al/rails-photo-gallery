@@ -1,27 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Photograph - Professional Photo Gallery</title>
+    <meta charset="utf-8">
+    <title><%= content_for?(:title) ? "#{content_for(:title)} | " : "" %>Photograph - Professional Photo Gallery</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= content_for?(:description) ? content_for(:description) : 'Professional photo gallery platform for photographers to showcase and share their work.' %>">
+    <meta name="theme-color" content="#2c3e50">
+    
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
     
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
     
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Favicon and app icons -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
   </head>
 
-  <body data-controller="gallery-viewer" data-action="keydown->gallery-viewer#keyPressed">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <body data-controller="gallery-viewer loading" 
+        data-action="keydown->gallery-viewer#keyPressed offline->loading#handleOffline online->loading#handleOnline">
+    
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Network error banner -->
+    <div class="network-error-banner" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="error-content">
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="m12 2-8 5v10c0 5.55 3.84 10 9 10s9-4.45 9-10V7l-10-5z"/>
+        </svg>
+        <div class="error-message">
+          <span class="error-text">Connection lost. Some features may not work properly.</span>
+        </div>
+        <button class="retry-button" data-action="click->loading#retryConnection" aria-label="Retry connection">
+          Retry
+        </button>
+        <button class="dismiss-button" data-action="click->loading#dismissBanner" aria-label="Dismiss banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Toast container for notifications -->
+    <div class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="Main navigation">
       <div class="container">
-        <%= link_to "Photograph", root_path, class: "navbar-brand" %>
+        <%= link_to "Photograph", root_path, class: "navbar-brand", 
+            title: "Go to homepage", "aria-label": "Photograph - Home" %>
         
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation menu">
           <span class="navbar-toggler-icon"></span>
         </button>
         
@@ -29,10 +79,14 @@
           <ul class="navbar-nav me-auto">
             <% if photographer_signed_in? %>
               <li class="nav-item">
-                <%= link_to "Dashboard", galleries_path, class: "nav-link" %>
+                <%= link_to "Dashboard", galleries_path, class: "nav-link", 
+                    "aria-label": "View gallery dashboard" %>
               </li>
               <li class="nav-item">
-                <%= link_to "New Gallery", new_gallery_path, class: "nav-link" %>
+                <%= link_to new_gallery_path, class: "nav-link",
+                    data: { loading_target: "button", loading_text: "Loading..." } do %>
+                  <i class="fas fa-plus me-1" aria-hidden="true"></i>New Gallery
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -40,21 +94,48 @@
           <ul class="navbar-nav">
             <% if photographer_signed_in? %>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle" 
+                   href="#" 
+                   role="button" 
+                   data-bs-toggle="dropdown"
+                   aria-expanded="false"
+                   aria-haspopup="true"
+                   aria-label="Account menu for <%= current_photographer.name %>">
+                  <i class="fas fa-user-circle me-1" aria-hidden="true"></i>
                   <%= current_photographer.name %>
                 </a>
-                <ul class="dropdown-menu">
-                  <li><%= link_to "Profile", edit_photographer_path(current_photographer), class: "dropdown-item" %></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><%= link_to "Logout", logout_path, method: :delete, class: "dropdown-item" %></li>
+                <ul class="dropdown-menu dropdown-menu-end" aria-label="Account menu">
+                  <li>
+                    <%= link_to edit_photographer_path(current_photographer), 
+                        class: "dropdown-item" do %>
+                      <i class="fas fa-user-edit me-2" aria-hidden="true"></i>Profile Settings
+                    <% end %>
+                  </li>
+                  <li><hr class="dropdown-divider" role="separator"></li>
+                  <li>
+                    <%= link_to logout_path, 
+                        method: :delete, 
+                        class: "dropdown-item",
+                        data: { 
+                          loading_target: "button",
+                          loading_text: "Signing out...",
+                          confirm: "Are you sure you want to sign out?"
+                        } do %>
+                      <i class="fas fa-sign-out-alt me-2" aria-hidden="true"></i>Sign Out
+                    <% end %>
+                  </li>
                 </ul>
               </li>
             <% else %>
               <li class="nav-item">
-                <%= link_to "Login", login_path, class: "nav-link" %>
+                <%= link_to "Sign In", login_path, class: "nav-link",
+                    data: { loading_target: "button" } %>
               </li>
               <li class="nav-item">
-                <%= link_to "Register", register_path, class: "nav-link" %>
+                <%= link_to register_path, class: "nav-link btn btn-outline-light ms-2",
+                    data: { loading_target: "button" } do %>
+                  <i class="fas fa-user-plus me-1" aria-hidden="true"></i>Register
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -62,18 +143,60 @@
       </div>
     </nav>
 
-    <main>
+    <main id="main-content" role="main">
+      <!-- Enhanced flash messages with better accessibility and UX -->
       <% if notice %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= notice %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success alert-dismissible" 
+             role="alert" 
+             aria-live="polite" 
+             aria-atomic="true">
+          <div class="alert-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22,4 12,14.01 9,11.01"></polyline>
+            </svg>
+          </div>
+          <div class="alert-content">
+            <div class="alert-title">Success</div>
+            <div class="alert-message"><%= notice %></div>
+          </div>
+          <button type="button" 
+                  class="alert-close" 
+                  data-bs-dismiss="alert" 
+                  aria-label="Close success message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       <% end %>
 
       <% if alert %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= alert %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-error alert-dismissible" 
+             role="alert" 
+             aria-live="assertive" 
+             aria-atomic="true">
+          <div class="alert-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <div class="alert-content">
+            <div class="alert-title">Error</div>
+            <div class="alert-message"><%= alert %></div>
+          </div>
+          <button type="button" 
+                  class="alert-close" 
+                  data-bs-dismiss="alert" 
+                  aria-label="Close error message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       <% end %>
 
@@ -107,14 +230,44 @@
       </div>
     </div>
 
-    <footer class="bg-dark text-white py-4 mt-5">
+    <footer class="bg-dark text-white py-4 mt-5" role="contentinfo" aria-label="Site footer">
       <div class="container">
         <div class="row">
           <div class="col-md-6">
-            <p>&copy; <%= Date.current.year %> Photograph. Professional photo gallery platform.</p>
+            <p class="mb-0">
+              &copy; <%= Date.current.year %> Photograph. Professional photo gallery platform.
+            </p>
           </div>
-          <div class="col-md-6 text-end">
-            <p>Built with Ruby on Rails and deployed on Vercel</p>
+          <div class="col-md-6 text-md-end">
+            <p class="mb-0">
+              <small class="text-light">
+                Built with Ruby on Rails and deployed on Vercel
+              </small>
+            </p>
+          </div>
+        </div>
+        <div class="row mt-3 pt-3 border-top border-secondary">
+          <div class="col-12 text-center">
+            <div class="d-flex justify-content-center gap-4">
+              <a href="#" 
+                 class="text-light text-decoration-none small"
+                 data-bs-toggle="modal" 
+                 data-bs-target="#keyboardShortcutsModal">
+                <i class="fas fa-keyboard me-1" aria-hidden="true"></i>
+                Keyboard Shortcuts
+              </a>
+              <a href="#" 
+                 class="text-light text-decoration-none small"
+                 data-bs-toggle="modal" 
+                 data-bs-target="#accessibilityModal">
+                <i class="fas fa-universal-access me-1" aria-hidden="true"></i>
+                Accessibility
+              </a>
+              <span class="text-muted small">
+                <i class="fas fa-heart me-1 text-danger" aria-hidden="true"></i>
+                Made for photographers
+              </span>
+            </div>
           </div>
         </div>
       </div>
