@@ -6,9 +6,6 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-# Explicitly require custom middleware before application class
-require_relative '../app/middleware/security_headers_middleware'
-
 module Photograph
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -22,6 +19,16 @@ module Photograph
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Autoload paths (must come before middleware configuration)
+    config.autoload_paths += %W[
+      #{config.root}/app/services
+      #{config.root}/app/middleware
+      #{config.root}/lib
+    ]
+
+    # Require custom middleware explicitly
+    require Rails.root.join('lib', 'security_headers_middleware')
+
     # Security middleware
     config.middleware.insert_before ActionDispatch::Cookies, SecurityHeadersMiddleware
     
@@ -34,12 +41,6 @@ module Photograph
         Rails.root.join('log', "security_#{Rails.env}.log")
       )
     end
-    
-    # Autoload paths
-    config.autoload_paths += %W[
-      #{config.root}/app/services
-      #{config.root}/app/middleware
-    ]
 
     # Active Job configuration
     config.active_job.queue_adapter = Rails.env.production? ? :sidekiq : :async

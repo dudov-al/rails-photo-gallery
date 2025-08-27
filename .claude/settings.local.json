@@ -36,7 +36,8 @@
       "WebSearch",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(docker build:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(docker-compose up:*)"
     ],
     "deny": [],
     "ask": []
