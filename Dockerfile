@@ -48,8 +48,11 @@ RUN if [ -f package.json ]; then npm ci --production && npm cache clean --force;
 # Copy application code
 COPY --chown=rails:rails . .
 
-# Precompile assets
-RUN SECRET_KEY_BASE=precompile_placeholder bundle exec rails assets:precompile
+# Precompile assets (skip database operations)
+ENV DATABASE_URL=postgresql://dummy:dummy@dummy:5432/dummy
+RUN SECRET_KEY_BASE=precompile_placeholder \
+    RAILS_ENV=production \
+    bundle exec rails assets:precompile
 
 # Create storage directories
 RUN mkdir -p /app/storage /app/log /app/tmp && \

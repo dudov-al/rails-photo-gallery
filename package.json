@@ -1,0 +1,11 @@
+{
+  "name": "rails-photo-gallery",
+  "version": "1.0.0",
+  "description": "Professional Rails photo gallery platform",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build script needed'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
