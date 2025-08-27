@@ -1,5 +1,6 @@
 # Multi-stage build for Rails photo gallery application
-FROM ruby:3.2.0-alpine AS base
+# Use Ruby 3.1.4 for better Rails 7.0.x compatibility
+FROM ruby:3.1.4-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \
