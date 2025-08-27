@@ -41,9 +41,8 @@ RUN bundle config set --local deployment 'true' && \
     bundle clean --force && \
     rm -rf vendor/bundle/ruby/*/cache/*.gem
 
-# Copy package.json if exists (for any npm dependencies)
-COPY --chown=rails:rails package*.json ./
-RUN if [ -f package.json ]; then npm ci --production && npm cache clean --force; fi
+# Rails app doesn't need npm dependencies for this build
+# Skip package.json copying and npm install
 
 # Copy application code
 COPY --chown=rails:rails . .

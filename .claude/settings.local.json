@@ -35,7 +35,8 @@
       "WebFetch(domain:vercel.com)",
       "WebSearch",
       "WebFetch(domain:www.npmjs.com)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
