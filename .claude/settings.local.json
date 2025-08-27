@@ -28,7 +28,11 @@
       "Bash(export:*)",
       "Bash(openssl rand:*)",
       "Bash(npm install:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "WebFetch(domain:vercel.link)",
+      "WebFetch(domain:vercel.com)"
     ],
     "deny": [],
     "ask": []
