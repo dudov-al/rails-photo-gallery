@@ -11,26 +11,26 @@ FROM ruby:3.1.4-alpine3.18 AS base
 # Install critical security updates
 RUN apk update && apk upgrade
 
-# Install system dependencies with version pinning for security
+# Install system dependencies
 RUN apk add --no-cache \
     # Build dependencies
-    build-base=~0.5 \
+    build-base \
     linux-headers \
     # Database
     postgresql15-dev \
     postgresql15-client \
-    # Image processing (security-hardened)
-    vips-dev=~8.14 \
-    vips-tools=~8.14 \
+    # Image processing
+    vips-dev \
+    vips-tools \
     # Essential tools
     git \
     curl \
     bash \
     tzdata \
-    # Node.js LTS with security updates
-    nodejs=~18.18 \
-    npm=~9.8 \
-    yarn=~1.22 && \
+    # Node.js and package managers
+    nodejs \
+    npm \
+    yarn && \
     # Clean package cache to reduce image size
     rm -rf /var/cache/apk/*
 
@@ -42,7 +42,6 @@ RUN addgroup -g 1001 -S rails && \
 ENV BUNDLE_APP_CONFIG="/usr/local/bundle" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development:test" \
-    BUNDLE_DEPLOYMENT="true" \
     BUNDLE_JOBS="4" \
     BUNDLE_RETRY="3"
 
@@ -54,22 +53,15 @@ FROM base AS dependencies
 WORKDIR /app
 
 # Copy dependency files first for better Docker layer caching
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile ./
 
-# Install Ruby gems with security and performance optimizations
-RUN bundle config set --global frozen 'true' && \
-    bundle config set --global deployment 'true' && \
-    bundle config set --global without 'development test' && \
+# Install Ruby gems with simplified configuration
+RUN bundle config set --global without 'development test' && \
     bundle config set --global jobs 4 && \
     bundle config set --global retry 3 && \
-    bundle config set --global timeout 15 && \
     bundle install --retry=3 && \
     # Remove unnecessary files to reduce image size
     bundle clean --force && \
-    find /usr/local/bundle -name "*.c" -delete && \
-    find /usr/local/bundle -name "*.h" -delete && \
-    find /usr/local/bundle -name "*.o" -delete && \
-    find /usr/local/bundle -name "*.gem" -delete && \
     rm -rf /usr/local/bundle/cache
 
 # Install Node.js dependencies if package.json exists
@@ -90,7 +82,7 @@ COPY --chown=rails:rails . .
 # Set production environment for build
 ENV RAILS_ENV=production \
     NODE_ENV=production \
-    SECRET_KEY_BASE=dummy_key_for_assets
+    SECRET_KEY_BASE=9a585637405072662984244470adb98149f05e4bf7a95901e00d47289bd283185b5b0e21dc3b5a942ed0cf6973ed515d86de7e3d17cec8471a8298a4a026740d
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/log /app/tmp/pids /app/tmp/cache /app/public/assets /app/storage && \
@@ -100,9 +92,8 @@ RUN mkdir -p /app/log /app/tmp/pids /app/tmp/cache /app/public/assets /app/stora
 USER rails
 
 # Precompile assets with security optimizations
-RUN bundle exec rails assets:precompile \
-    RAILS_ENV=production \
-    SECRET_KEY_BASE=dummy_key_for_assets && \
+RUN RAILS_ENV=production SECRET_KEY_BASE=9a585637405072662984244470adb98149f05e4bf7a95901e00d47289bd283185b5b0e21dc3b5a942ed0cf6973ed515d86de7e3d17cec8471a8298a4a026740d \
+    bundle exec rails assets:precompile && \
     # Remove source maps and debugging info for production
     find public/assets -name "*.map" -delete
 

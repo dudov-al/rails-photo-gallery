@@ -82,23 +82,6 @@ Rails.application.configure do
 
   # Database optimizations
   config.active_record.dump_schema_after_migration = false
-  
-  # Connection pool optimization for serverless
-  config.database_configuration = {
-    'production' => {
-      'adapter' => 'postgresql',
-      'url' => ENV['DATABASE_URL'],
-      'pool' => ENV.fetch('RAILS_MAX_THREADS', 5).to_i,
-      'timeout' => 5000,
-      'checkout_timeout' => 5,
-      'reaping_frequency' => 10,
-      'idle_timeout' => 300,
-      'variables' => {
-        'statement_timeout' => '30s',
-        'lock_timeout' => '10s'
-      }
-    }
-  }
 
   # Memory and GC optimizations
   config.after_initialize do
