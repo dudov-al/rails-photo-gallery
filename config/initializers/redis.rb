@@ -50,24 +50,26 @@ if Rails.env.production?
   end
 end
 
-# Test Redis connection on startup
-begin
-  Redis.current.with do |redis|
-    redis.ping
-    Rails.logger.info "[REDIS] Successfully connected to Redis at #{redis_url}"
-  end
-rescue => e
-  Rails.logger.warn "[REDIS] Redis connection failed: #{e.message}"
-  if Rails.env.production?
-    Rails.logger.error "[REDIS] Redis is required in production environment"
-    # Don't fail startup, but log critical issue
-    SecurityAuditLogger.log(
-      event_type: 'redis_connection_failed',
-      additional_data: {
-        error: e.message,
-        environment: Rails.env,
-        redis_url: redis_url.gsub(/\/\/[^@]*@/, '//***:***@') # Hide credentials in logs
-      }
-    )
+# Test Redis connection on startup (skip during asset precompilation)
+unless Rails.application.config.assets.compile
+  begin
+    Redis.current.with do |redis|
+      redis.ping
+      Rails.logger.info "[REDIS] Successfully connected to Redis at #{redis_url}"
+    end
+  rescue => e
+    Rails.logger.warn "[REDIS] Redis connection failed: #{e.message}"
+    if Rails.env.production?
+      Rails.logger.error "[REDIS] Redis is required in production environment"
+      # Don't fail startup, but log critical issue
+      SecurityAuditLogger.log(
+        event_type: 'redis_connection_failed',
+        additional_data: {
+          error: e.message,
+          environment: Rails.env,
+          redis_url: redis_url.gsub(/\/\/[^@]*@/, '//***:***@') # Hide credentials in logs
+        }
+      )
+    end
   end
 end
