@@ -88,9 +88,11 @@ Rails.application.configure do
     # Ruby GC tuning for better performance
     GC::Profiler.enable if ENV['RAILS_GC_PROFILING']
     
-    # Preload frequently used classes
-    Rails.logger.info "Preloading application classes..."
-    [Gallery, Image, Photographer].each(&:connection)
+    # Preload frequently used classes (skip during asset precompilation)
+    unless Rails.application.config.assets.compile
+      Rails.logger.info "Preloading application classes..."
+      [Gallery, Image, Photographer].each(&:connection)
+    end
     
     Rails.logger.info "Production environment initialized with performance optimizations"
   end
