@@ -1,76 +1,165 @@
-# Multi-stage build for Rails photo gallery application
-# Use Ruby 3.1.4 for better Rails 7.0.x compatibility
-FROM ruby:3.1.4-alpine AS base
+# ===========================================
+# Production-Ready Multi-Stage Rails Dockerfile
+# Optimized for Rails 7.1.x Photography Gallery
+# ===========================================
 
-# Install system dependencies
+# ===========================================
+# Stage 1: Base Image with System Dependencies
+# ===========================================
+FROM ruby:3.1.4-alpine3.18 AS base
+
+# Install critical security updates
+RUN apk update && apk upgrade
+
+# Install system dependencies with version pinning for security
 RUN apk add --no-cache \
-    build-base \
-    postgresql-dev \
-    postgresql-client \
-    redis \
-    tzdata \
-    imagemagick \
-    imagemagick-dev \
-    vips \
-    vips-dev \
+    # Build dependencies
+    build-base=~0.5 \
+    linux-headers \
+    # Database
+    postgresql15-dev \
+    postgresql15-client \
+    # Image processing (security-hardened)
+    vips-dev=~8.14 \
+    vips-tools=~8.14 \
+    # Essential tools
     git \
     curl \
-    nodejs \
-    npm \
-    yarn \
-    bash
+    bash \
+    tzdata \
+    # Node.js LTS with security updates
+    nodejs=~18.18 \
+    npm=~9.8 \
+    yarn=~1.22 && \
+    # Clean package cache to reduce image size
+    rm -rf /var/cache/apk/*
 
-# Set environment variables
+# Create non-root user with specific UID/GID for security
+RUN addgroup -g 1001 -S rails && \
+    adduser -u 1001 -S rails -G rails -h /app
+
+# Configure Ruby and Bundler for optimal performance
+ENV BUNDLE_APP_CONFIG="/usr/local/bundle" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="development:test" \
+    BUNDLE_DEPLOYMENT="true" \
+    BUNDLE_JOBS="4" \
+    BUNDLE_RETRY="3"
+
+# ===========================================
+# Stage 2: Dependencies Installation
+# ===========================================
+FROM base AS dependencies
+
+WORKDIR /app
+
+# Copy dependency files first for better Docker layer caching
+COPY Gemfile Gemfile.lock ./
+
+# Install Ruby gems with security and performance optimizations
+RUN bundle config set --global frozen 'true' && \
+    bundle config set --global deployment 'true' && \
+    bundle config set --global without 'development test' && \
+    bundle config set --global jobs 4 && \
+    bundle config set --global retry 3 && \
+    bundle config set --global timeout 15 && \
+    bundle install --retry=3 && \
+    # Remove unnecessary files to reduce image size
+    bundle clean --force && \
+    find /usr/local/bundle -name "*.c" -delete && \
+    find /usr/local/bundle -name "*.h" -delete && \
+    find /usr/local/bundle -name "*.o" -delete && \
+    find /usr/local/bundle -name "*.gem" -delete && \
+    rm -rf /usr/local/bundle/cache
+
+# Install Node.js dependencies if package.json exists
+COPY package*.json yarn.lock* ./
+RUN if [ -f package.json ]; then \
+    npm ci --only=production --no-audit --no-fund && \
+    npm cache clean --force; \
+    fi
+
+# ===========================================
+# Stage 3: Application Build
+# ===========================================
+FROM dependencies AS builder
+
+# Copy application source code
+COPY --chown=rails:rails . .
+
+# Set production environment for build
+ENV RAILS_ENV=production \
+    NODE_ENV=production \
+    SECRET_KEY_BASE=dummy_key_for_assets
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/log /app/tmp/pids /app/tmp/cache /app/public/assets /app/storage && \
+    chown -R rails:rails /app/log /app/tmp /app/public /app/storage
+
+# Switch to non-root user for build process
+USER rails
+
+# Precompile assets with security optimizations
+RUN bundle exec rails assets:precompile \
+    RAILS_ENV=production \
+    SECRET_KEY_BASE=dummy_key_for_assets && \
+    # Remove source maps and debugging info for production
+    find public/assets -name "*.map" -delete
+
+# ===========================================
+# Stage 4: Production Runtime
+# ===========================================
+FROM base AS runtime
+
+# Install only runtime dependencies
+RUN apk add --no-cache \
+    postgresql15-client \
+    vips=~8.14 \
+    curl \
+    bash \
+    tzdata && \
+    rm -rf /var/cache/apk/*
+
+# Set production environment variables
 ENV RAILS_ENV=production \
     RACK_ENV=production \
     NODE_ENV=production \
     RAILS_SERVE_STATIC_FILES=true \
-    RAILS_LOG_TO_STDOUT=true
+    RAILS_LOG_TO_STDOUT=true \
+    MALLOC_ARENA_MAX=2
 
-# Create app directory and user
-RUN addgroup -g 1001 -S rails && \
-    adduser -u 1001 -S rails -G rails
-
-# Set working directory
+# Create app directory and set permissions
 WORKDIR /app
+RUN chown rails:rails /app
 
-# Copy Gemfile (no Gemfile.lock for fresh gem resolution)
-COPY --chown=rails:rails Gemfile ./
+# Copy bundle from dependencies stage
+COPY --from=dependencies --chown=rails:rails /usr/local/bundle /usr/local/bundle
 
-# Install gems (force clean install)
-RUN bundle config set --local deployment 'false' && \
-    bundle config set --local without 'development test' && \
-    bundle config set --local path 'vendor/bundle' && \
-    bundle install && \
-    bundle clean --force && \
-    rm -rf vendor/bundle/ruby/*/cache/*.gem
+# Copy built application from builder stage
+COPY --from=builder --chown=rails:rails /app .
 
-# Rails app doesn't need npm dependencies for this build
-# Skip package.json copying and npm install
-
-# Copy application code
-COPY --chown=rails:rails . .
-
-# Skip asset precompilation during build - will be done at runtime
-# This avoids database/external service connection issues during build
-
-# Create storage directories
-RUN mkdir -p /app/storage /app/log /app/tmp && \
-    chown -R rails:rails /app/storage /app/log /app/tmp
+# Create and set permissions for runtime directories
+RUN mkdir -p /app/tmp/pids /app/tmp/sockets && \
+    chown -R rails:rails /app/tmp
 
 # Switch to non-root user
 USER rails
 
-# Expose port
+# Expose port 3000
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Add comprehensive health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
-# Copy and set up startup script
-COPY --chown=rails:rails docker/startup.sh /app/
-RUN chmod +x /app/startup.sh
+# Add signal handling for graceful shutdowns
+STOPSIGNAL SIGTERM
 
-# Default command - use startup script
-CMD ["/app/startup.sh", "bundle", "exec", "puma", "-C", "config/puma.rb"]
+# Add labels for better container management
+LABEL maintainer="Rails Photography Gallery" \
+      version="1.0.0" \
+      description="Production-ready Rails photography gallery application" \
+      org.opencontainers.image.source="https://github.com/yourrepo/photograph"
+
+# Use exec form for proper signal handling
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]

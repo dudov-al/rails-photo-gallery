@@ -1,12 +1,71 @@
-# Git
-.git
-.gitignore
-README.md
-.env.example
-.env
+# ===========================================
+# Docker Ignore File - Security Hardened
+# ===========================================
 
-# Documentation
+# ===========================================
+# CRITICAL SECURITY EXCLUSIONS
+# ===========================================
+# Never include these files in Docker images!
+
+# Environment and secrets
+.env*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+config/secrets.yml
+config/master.key
+config/credentials/*
+.secret
+
+# SSH and GPG keys
+.ssh/
+*.pub
+*.private
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+.gnupg/
+
+# Database dumps and backups
+*.sql
+*.dump
+*.backup
+database.yml.backup
+backups/
+
+# Sensitive application files
+config/database.yml.production
+config/secrets.yml.production
+
+# ===========================================
+# VERSION CONTROL
+# ===========================================
+.git/
+.gitignore
+.gitmodules
+.gitattributes
+.github/
+
+# ===========================================
+# DOCUMENTATION & REPORTS
+# ===========================================
+# Documentation files (not needed in production)
+README*
+CHANGELOG*
+LICENSE*
 *.md
+docs/
+documentation/
+
+# Generated reports
+*REPORT*.md
+*GUIDE*.md
+*IMPLEMENTATION*.md
+*DOCUMENTATION*.md
 DEPLOYMENT.md
 PERFORMANCE_*.md
 SECURITY_*.md
@@ -16,56 +75,205 @@ PHASE_5_IMPLEMENTATION.md
 PRODUCTION_DEPLOYMENT_GUIDE.md
 VERCEL_DEPLOYMENT_INSTRUCTIONS.md
 
-# Development
-.env.development
-.env.test
-.env.local
-
-# Log files  
-log/*
-*.log
-npm-debug.log*
-
-# Runtime data
-tmp/*
-!tmp/.keep
-storage/*
-!storage/.keep
-
-# Dependency directories
-node_modules/
-vendor/bundle/
-.bundle/
-
-# Test files
-spec/
-test/
-coverage/
-
-# Development tools
+# ===========================================
+# DEVELOPMENT ENVIRONMENT
+# ===========================================
+# Development tools and configs
 .vscode/
 .idea/
+.rubymine/
+.sublime-*
 *.swp
 *.swo
 *~
+.editorconfig
 
-# OS files
+# Development databases
+*.sqlite3
+*.db
+db/*.sqlite3
+
+# Development environment files
+.env.development
+.env.test
+.env.local
+.env.*.local
+
+# ===========================================
+# LOGS AND TEMPORARY FILES
+# ===========================================
+# Log files
+log/
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime and temporary data
+tmp/
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+
+# PID files
+*.pid
+*.pid.*
+
+# ===========================================
+# DEPENDENCIES AND BUILD ARTIFACTS
+# ===========================================
+# Ruby/Rails dependencies
+vendor/bundle/
+.bundle/
+Gemfile.lock.backup
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.yarn/
+
+# Built assets (will be rebuilt in container)
+public/assets/
+public/packs/
+app/assets/builds/
+
+# ===========================================
+# TESTING AND COVERAGE
+# ===========================================
+# Test files and coverage
+spec/
+test/
+coverage/
+.rspec
+.rspec_status
+.simplecov
+junit.xml
+
+# Factory and fixture files
+spec/factories/
+test/factories/
+spec/fixtures/
+test/fixtures/
+
+# ===========================================
+# PLATFORM SPECIFIC
+# ===========================================
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+.AppleDouble
+.LSOverride
+
+# Windows
 ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
 
-# Vercel specific (not needed for Docker)
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ===========================================
+# DEPLOYMENT PLATFORMS
+# ===========================================
+# Vercel (not needed for Docker)
 .vercel/
-vercel.json
-vercel.json.backup
-vercel_optimized.json
+vercel.json*
 api/
 
-# Docker
-Dockerfile*
-docker-compose*
-.dockerignore
+# Heroku
+.slugignore
+Procfile.backup
+
+# Other cloud platforms
+.platform/
+.elasticbeanstalk/
+.azure/
+
+# ===========================================
+# DOCKER RELATED
+# ===========================================
+# Docker files (keep only what's needed)
+Dockerfile.dev
+Dockerfile.test
+docker-compose.override.yml
+docker-compose.*.yml
+!docker-compose.prod.yml
+.dockerignore.example
+
+# Docker volumes and data
+.docker/
+docker/ssl/
+docker/volumes/
+
+# ===========================================
+# STORAGE AND UPLOADS
+# ===========================================
+# Local storage (will be mounted as volumes)
+storage/
+public/uploads/
+uploads/
+
+# Image processing cache
+tmp/cache/assets/
+
+# ===========================================
+# MONITORING AND PROFILING
+# ===========================================
+# Profiler output
+profile/
+profiler/
+*.prof
+*.stackprof
+
+# Monitoring data
+monitoring/
+metrics/
+
+# ===========================================
+# MISCELLANEOUS
+# ===========================================
+# Editor backups
+*.bak
+*.backup
+*.swp
+*.swo
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Package files
+*.gem
+*.deb
+*.rpm
+
+# Large media files (should be in external storage)
+*.mov
+*.mp4
+*.avi
+*.wmv
+*.flv
+*.webm
