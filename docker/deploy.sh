@@ -202,7 +202,7 @@ deploy() {
     log "INFO" "Waiting for Redis to be ready..."
     retry_count=0
     while [ $retry_count -lt 30 ]; do
-        if docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping | grep -q PONG; then
+        if docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli -a "$REDIS_PASSWORD" ping 2>/dev/null | grep -q PONG; then
             break
         fi
         log "INFO" "Redis not ready yet, waiting 5s... (attempt $((retry_count + 1))/30)"
