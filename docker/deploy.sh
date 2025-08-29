@@ -72,8 +72,8 @@ check_prerequisites() {
         error_exit "Docker daemon is not running"
     fi
     
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null; then
+    # Check if Docker Compose is installed (plugin or standalone)
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
         error_exit "Docker Compose is not installed"
     fi
     
@@ -174,20 +174,20 @@ deploy() {
     
     # Build Docker images
     log "INFO" "Building Docker images..."
-    docker-compose -f "$COMPOSE_FILE" build --no-cache --pull
+    docker compose -f "$COMPOSE_FILE" build --no-cache --pull
     
     # Tag images
     docker tag photograph:latest "photograph:$IMAGE_TAG"
     
     # Start infrastructure services first
     log "INFO" "Starting infrastructure services..."
-    docker-compose -f "$COMPOSE_FILE" up -d db redis
+    docker compose -f "$COMPOSE_FILE" up -d db redis
     
     # Wait for infrastructure to be ready
     log "INFO" "Waiting for database to be ready..."
     local retry_count=0
     while [ $retry_count -lt 30 ]; do
-        if docker-compose -f "$COMPOSE_FILE" exec -T db pg_isready -U photograph -d photograph_production; then
+        if docker compose -f "$COMPOSE_FILE" exec -T db pg_isready -U photograph -d photograph_production; then
             break
         fi
         log "INFO" "Database not ready yet, waiting 5s... (attempt $((retry_count + 1))/30)"
@@ -202,7 +202,7 @@ deploy() {
     log "INFO" "Waiting for Redis to be ready..."
     retry_count=0
     while [ $retry_count -lt 30 ]; do
-        if docker-compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping | grep -q PONG; then
+        if docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping | grep -q PONG; then
             break
         fi
         log "INFO" "Redis not ready yet, waiting 5s... (attempt $((retry_count + 1))/30)"
@@ -216,15 +216,15 @@ deploy() {
     
     # Run database migrations
     log "INFO" "Running database migrations..."
-    docker-compose -f "$COMPOSE_FILE" run --rm app bundle exec rails db:create db:migrate
+    docker compose -f "$COMPOSE_FILE" run --rm app bundle exec rails db:create db:migrate
     
     # Start application services
     log "INFO" "Starting application services..."
-    docker-compose -f "$COMPOSE_FILE" up -d app sidekiq
+    docker compose -f "$COMPOSE_FILE" up -d app sidekiq
     
     # Start nginx (reverse proxy)
     log "INFO" "Starting reverse proxy..."
-    docker-compose -f "$COMPOSE_FILE" up -d nginx
+    docker compose -f "$COMPOSE_FILE" up -d nginx
     
     log "SUCCESS" "All services started"
 }
@@ -273,12 +273,12 @@ rollback_deployment() {
     
     # Stop current services
     log "INFO" "Stopping current services..."
-    docker-compose -f "$COMPOSE_FILE" down
+    docker compose -f "$COMPOSE_FILE" down
     
     # Restore database if backup exists
     if [ -f "$BACKUP_DIR/${backup_name}_database.sql.gz" ]; then
         log "INFO" "Restoring database..."
-        docker-compose -f "$COMPOSE_FILE" up -d db
+        docker compose -f "$COMPOSE_FILE" up -d db
         sleep 10
         zcat "$BACKUP_DIR/${backup_name}_database.sql.gz" | docker exec -i photograph_db_prod psql -U photograph
     fi
@@ -337,8 +337,8 @@ main() {
     log "INFO" "   Admin dashboard: https://$PHOTOGRAPH_HOST/sidekiq"
     log "INFO" ""
     log "INFO" "🔍 Useful commands:"
-    log "INFO" "   View logs: docker-compose -f $COMPOSE_FILE logs -f"
-    log "INFO" "   Check status: docker-compose -f $COMPOSE_FILE ps"
+    log "INFO" "   View logs: docker compose -f $COMPOSE_FILE logs -f"
+    log "INFO" "   Check status: docker compose -f $COMPOSE_FILE ps"
     log "INFO" "   Health check: $SCRIPT_DIR/scripts/health-check.sh"
     log "INFO" "   Monitoring: $SCRIPT_DIR/scripts/monitoring.sh"
     log "INFO" ""
