@@ -16,7 +16,7 @@ Sidekiq.configure_client do |config|
 end
 
 # Configure job retry settings
-Sidekiq.default_worker_options = {
+Sidekiq.default_job_options = {
   retry: 3,
   dead: true,
   backtrace: true
